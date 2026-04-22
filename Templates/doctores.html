@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Doctores</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <h2 class="mb-4">Listado de Doctores</h2>
+
+    <a href="{{ url_for('doctores.agregar_doctor') }}" class="btn btn-primary mb-3">Agregar Doctor</a>
+
+    <a href="{{ url_for('auth.inicio') }}" class="btn btn-secondary mb-3">Volver al Inicio</a>
+
+    <table class="table table-bordered bg-white">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Especialidad</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for doctor in doctores %}
+            <tr>
+                <td>{{ doctor[0] }}</td>
+                <td>{{ doctor[1] }}</td>
+                <td>{{ doctor[2] }}</td>
+                <td>
+                    <a href="{{ url_for('doctores.editar_doctor', id=doctor[0]) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{{ url_for('doctores.eliminar_doctor', id=doctor[0]) }}"
+                       class="btn btn-sm btn-danger"
+                       onclick="return confirm('¿Estás seguro de eliminar este doctor?')">
+                        Eliminar
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>

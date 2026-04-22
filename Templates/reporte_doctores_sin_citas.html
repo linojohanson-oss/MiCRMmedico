@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte: Doctores sin Citas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <h2>Reporte: Doctores sin Citas</h2>
+
+    <div class="mb-3">
+        <a href="{{ url_for('reportes') }}" class="btn btn-secondary">Volver a Reportes</a>
+    </div>
+
+    {% if resultados %}
+        <div class="card p-3 mb-4">
+            <h5>Listado de Doctores</h5>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Especialidad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doctor in resultados %}
+                        <tr>
+                            <td>{{ doctor[0] }}</td>
+                            <td>{{ doctor[1] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">Todos los doctores tienen al menos una cita asignada.</div>
+    {% endif %}
+</div>
+</body>
+</html>

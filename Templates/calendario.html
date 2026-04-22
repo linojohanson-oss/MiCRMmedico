@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendario de Citas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body { background: #f5f7fb; }
+
+        .top-banner {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.2rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0;
+        }
+
+        .calendar-day {
+            border: 1px solid #e9ecef;
+            min-height: 210px;
+            padding: 6px;
+            background: white;
+        }
+
+        .calendar-day.empty {
+            background: #f1f1f1;
+        }
+
+        .day-number {
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .today {
+            background: #198754;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+        }
+
+        .badge-dia {
+            background: #0d6efd;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+
+        .cita {
+            border-radius: 6px;
+            padding: 6px;
+            margin-top: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .cita:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+
+        .pendiente { background: #eef5ff; }
+        .atendida { background: #e9f9ee; }
+
+        .cardio { border-left: 4px solid #dc3545; }
+        .endo { border-left: 4px solid #fd7e14; }
+        .clinica { border-left: 4px solid #198754; }
+        .oftalmo { border-left: 4px solid #6f42c1; }
+        .neuro { border-left: 4px solid #0dcaf0; }
+
+        .acciones-cita {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .acciones-cita .btn,
+        .acciones-cita .badge {
+            font-size: 0.68rem;
+            padding: 2px 6px;
+        }
+
+        .detalle-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: .75rem;
+            padding: .9rem;
+            height: 100%;
+        }
+
+        .detalle-label {
+            font-size: .85rem;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+
+        .header-dias {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .header-dia {
+            background: #212529;
+            color: white;
+            text-align: center;
+            padding: 10px 4px;
+            font-weight: 600;
+            border-right: 1px solid rgba(255,255,255,.1);
+        }
+
+        @media (max-width: 900px) {
+            .calendar-grid,
+            .header-dias {
+                grid-template-columns: 1fr;
+            }
+
+            .header-dia {
+                display: none;
+            }
+
+            .calendar-day {
+                min-height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+
+    <div class="top-banner mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h4 class="mb-0">📅 Calendario</h4>
+                <small>{{ nombre_mes }} {{ anio }}</small>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('citas.calendario', mes=mes_anterior, anio=anio_anterior, doctor_id=doctor_id) }}" class="btn btn-light btn-sm">
+                    ←
+                </a>
+                <a href="{{ url_for('citas.calendario') }}" class="btn btn-warning btn-sm">
+                    Hoy
+                </a>
+                <a href="{{ url_for('citas.calendario', mes=mes_siguiente, anio=anio_siguiente, doctor_id=doctor_id) }}" class="btn btn-light btn-sm">
+                    →
+                </a>
+                <a href="{{ url_for('auth.inicio') }}" class="btn btn-outline-light btn-sm">
+                    🏠 Inicio
+                </a>
+                <a href="{{ url_for('clientes.index') }}" class="btn btn-outline-light btn-sm">
+                    👤 Clientes
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-2 mb-3">
+        <div class="col-lg-8">
+            <form class="row g-2">
+                <input type="hidden" name="mes" value="{{ mes }}">
+                <input type="hidden" name="anio" value="{{ anio }}">
+
+                <div class="col-md-6">
+                    <select name="doctor_id" class="form-select">
+                        <option value="">Todos los doctores</option>
+                        {% for d in doctores %}
+                        <option value="{{ d[0] }}" {% if doctor_id == d[0] %}selected{% endif %}>
+                            {{ d[1] }} - {{ d[2] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button class="btn btn-primary w-100">Filtrar</button>
+                </div>
+
+                <div class="col-md-3">
+                    <a href="{{ url_for('citas.calendario', mes=mes, anio=anio) }}" class="btn btn-outline-secondary w-100">
+                        Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-4 d-flex justify-content-lg-end">
+            <a href="{{ url_for('clientes.index') }}" class="btn btn-success">
+                ➕ Agregar cita
+            </a>
+        </div>
+    </div>
+
+    <div class="header-dias mb-0">
+        <div class="header-dia">Lunes</div>
+        <div class="header-dia">Martes</div>
+        <div class="header-dia">Miércoles</div>
+        <div class="header-dia">Jueves</div>
+        <div class="header-dia">Viernes</div>
+        <div class="header-dia">Sábado</div>
+        <div class="header-dia">Domingo</div>
+    </div>
+
+    <div class="calendar-grid">
+
+        {% for semana in semanas %}
+            {% for dia in semana %}
+
+                {% if dia == 0 %}
+                    <div class="calendar-day empty"></div>
+                {% else %}
+                    <div class="calendar-day">
+
+                        <div class="day-number">
+                        <a href="{{ url_for('citas.agenda_dia', fecha=anio ~ '-' ~ '%02d'|format(mes) ~ '-' ~ '%02d'|format(dia)) }}"
+                            style="text-decoration:none; color:inherit;">
+                            {{ dia }}
+                        </a>
+
+
+                            {% if hoy.day == dia and hoy.month == mes and hoy.year == anio %}
+                                <span class="today">Hoy</span>
+                            {% endif %}
+
+                            {% if dia in citas_por_dia %}
+                                <span class="badge-dia">{{ citas_por_dia[dia]|length }}</span>
+                            {% endif %}
+                        </div>
+
+                        {% if dia in citas_por_dia %}
+                            {% for c in citas_por_dia[dia] %}
+
+                                {% set esp = '' %}
+                                {% if c.especialidad == 'Cardiología' %}{% set esp='cardio' %}
+                                {% elif c.especialidad == 'Endocrinología' %}{% set esp='endo' %}
+                                {% elif c.especialidad == 'Clínica' %}{% set esp='clinica' %}
+                                {% elif c.especialidad == 'Oftalmología' %}{% set esp='oftalmo' %}
+                                {% elif c.especialidad == 'Neurología' %}{% set esp='neuro' %}
+                                {% endif %}
+
+                                <div class="cita {% if c.atendida %}atendida{% else %}pendiente{% endif %} {{ esp }}"
+                                     data-id="{{ c.id }}"
+                                     data-cliente="{{ c.cliente_id }}"
+                                     data-hora="{{ c.hora }}"
+                                     data-paciente="{{ c.cliente_nombre }}"
+                                     data-doctor="{{ c.doctor_nombre }}"
+                                     data-especialidad="{{ c.especialidad }}"
+                                     data-desc="{{ c.descripcion }}"
+                                     data-atendida="{{ 1 if c.atendida else 0 }}">
+
+                                    <strong>{{ c.hora }}</strong><br>
+                                    {{ c.cliente_nombre }}<br>
+                                    <small>{{ c.doctor_nombre }}</small>
+
+                                    <div class="acciones-cita">
+                                        <a href="{{ url_for('citas.ver_citas', cliente_id=c.cliente_id) }}"
+                                           class="btn btn-outline-primary btn-sm"
+                                           onclick="event.stopPropagation();">
+                                            Ver citas
+                                        </a>
+
+                                        {% if not c.atendida %}
+                                        <a href="{{ url_for('atenciones.registrar_atencion', cita_id=c.id) }}"
+                                           class="btn btn-success btn-sm"
+                                           onclick="event.stopPropagation();">
+                                            Atender
+                                        </a>
+                                        {% else %}
+                                        <span class="badge bg-success" onclick="event.stopPropagation();">
+                                            Atendida
+                                        </span>
+                                        {% endif %}
+                                    </div>
+
+                                </div>
+
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-muted small">Sin citas</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+            {% endfor %}
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div class="modal fade" id="modalCita" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Detalle de cita</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.querySelectorAll('.cita').forEach(el => {
+    el.addEventListener('click', function () {
+        let id = this.dataset.id;
+        let cliente = this.dataset.cliente;
+        let atendida = this.dataset.atendida == 1;
+
+        document.getElementById('modalBody').innerHTML = `
+            <div class="detalle-box">
+                <div class="mb-2"><strong>Hora:</strong> ${this.dataset.hora}</div>
+                <div class="mb-2"><strong>Paciente:</strong> ${this.dataset.paciente}</div>
+                <div class="mb-2"><strong>Doctor:</strong> ${this.dataset.doctor}</div>
+                <div class="mb-2"><strong>Especialidad:</strong> ${this.dataset.especialidad}</div>
+                <div><strong>Descripción:</strong> ${this.dataset.desc}</div>
+            </div>
+        `;
+
+        if (!atendida) {
+            document.getElementById('modalFooter').innerHTML = `
+                <a href="/citas/${cliente}" class="btn btn-outline-primary">Ver citas</a>
+                <a href="/atencion/${id}" class="btn btn-success">Atender</a>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            `;
+        } else {
+            document.getElementById('modalFooter').innerHTML = `
+                <a href="/citas/${cliente}" class="btn btn-outline-primary">Ver citas</a>
+                <span class="btn btn-success disabled">✔ Atendida</span>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            `;
+        }
+
+        new bootstrap.Modal(document.getElementById('modalCita')).show();
+    });
+});
+</script>
+
+</body>
+</html>

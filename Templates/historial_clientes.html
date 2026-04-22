@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4 text-primary">Historial de Atenciones del Cliente</h2>
+
+  {% if atenciones %}
+  <table class="table table-striped table-hover shadow-sm rounded">
+    <thead class="table-primary">
+      <tr>
+        <th>Fecha</th>
+        <th>Especialidad</th>
+        <th>Doctor</th>
+        <th>Diagnóstico</th>
+        <th>Tratamiento</th>
+        <th>Ver detalle</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for atencion in atenciones %}
+      <tr>
+        <td>
+          {% if atencion.fecha %}
+            {{ atencion.fecha.strftime("%Y-%m-%d %H:%M") if atencion.fecha.__class__.__name__ == 'datetime' else atencion.fecha }}
+          {% else %}—{% endif %}
+        </td>
+        <td>{{ atencion.especialidad or "—" }}</td>
+        <td>{{ atencion.doctor or atencion.doctor_nombre or "—" }}</td>
+        <td class="text-truncate" style="max-width:220px">{{ atencion.diagnostico or "—" }}</td>
+        <td class="text-truncate" style="max-width:220px">{{ atencion.tratamiento or "—" }}</td>
+        <td class="d-flex gap-2">
+          <!-- Modal compacto -->
+          <button type="button"
+                  class="btn btn-outline-info btn-sm ver-detalle"
+                  data-id="{{ atencion.atencion_id or atencion.id }}">
+            🔍 Detalle
+          </button>
+          <!-- Página completa (opcional) -->
+          <a class="btn btn-outline-secondary btn-sm"
+             href="{{ url_for('ver_atencion', atencion_id=(atencion.atencion_id or atencion.id)) }}">
+            ↗ Página
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div class="alert alert-warning">No hay atenciones registradas para este cliente.</div>
+  {% endif %}
+
+  <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">↩ Volver</a>
+</div>
+
+<!-- Modal Detalle (modo compacto) -->
+<div class="modal fade" id="mdlDetalle" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle de la atención</h5>
+        <div class="btn-group me-2">
+          <button class="btn btn-sm btn-outline-secondary" id="toggleCompact">Compacto</button>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">Cargando…</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Estilos del modal compacto -->
+<style>
+  #mdlDetalle.compact .card { border:0; border-radius:.75rem; box-shadow:none; }
+  #mdlDetalle.compact .card .card-body { padding:12px 14px; }
+  #mdlDetalle .grid-metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:.5rem; }
+  #mdlDetalle .metric { border:1px solid #e6e9f0; border-radius:.5rem; padding:.25rem .5rem; text-align:center; }
+  #mdlDetalle .metric .label { font-size:.75rem; color:#6c757d; }
+  #mdlDetalle .metric .value { font-weight:600; font-size:.95rem; }
+  .text-truncate-2{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .mono{font-family:ui-monospace, Menlo, Consolas, monospace; white-space:pre-wrap}
+</style>
+
+<!-- Scripts del modal -->
+<script>
+(function(){
+  const modalEl = document.getElementById('mdlDetalle');
+  const body  = modalEl.querySelector('.modal-body');
+  const btnCompact = document.getElementById('toggleCompact');
+  let modal;
+
+  // preferencia de compacto
+  const saved = localStorage.getItem('detalleCompact') === '1';
+  if(saved) modalEl.classList.add('compact');
+  btnCompact?.addEventListener('click', ()=>{
+    modalEl.classList.toggle('compact');
+    localStorage.setItem('detalleCompact', modalEl.classList.contains('compact') ? '1' : '0');
+  });
+
+  // Patrón seguro para construir la URL del endpoint JSON
+  // Esto devuelve algo como "/atencion/0/detalle"
+  const endpointPattern = "{{ url_for('detalle_atencion_json', atencion_id=0) }}";
+  function endpoint(id){
+    // reemplaza "/0/" por "/<id>/"
+    return endpointPattern.replace('/0/', `/${id}/`);
+  }
+
+  const preview = (txt, n=160) => {
+    if(!txt) return '—'; txt = String(txt);
+    return txt.length > n ? txt.slice(0,n).trim() + '…' : txt;
+  };
+
+  function secCollapsable(titulo, id, resumenHTML, fullHTML){
+    return `
+    <div class="card mb-2">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="mb-0">${titulo}</h6>
+          <a class="small text-decoration-none" data-bs-toggle="collapse" href="#${id}">ver más</a>
+        </div>
+        <div class="text-truncate-2 mono">${resumenHTML}</div>
+        <div class="collapse mt-2" id="${id}">
+          <div class="mono">${fullHTML}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  async function cargarDetalle(id){
+    if (!modal) modal = new bootstrap.Modal(modalEl);
+    body.textContent = 'Cargando…';
+    modal.show();
+    try{
+      // --- fetch robusto: intenta parsear JSON; si recibe HTML, te lo muestra como error ---
+      const res = await fetch(endpoint(id));
+      const raw = await res.text();
+      let j;
+      try { j = JSON.parse(raw); }
+      catch(e){
+        console.error('Respuesta no JSON del endpoint:', raw);
+        body.innerHTML = `<div class="text-danger">Error: ${e.message}</div>`;
+        return;
+      }
+
+      if(!j.ok){
+        console.error('Detalle error:', j.error);
+        body.innerHTML = '<div class="text-danger">Error: ' + (j.error || 'No se pudo cargar') + '</div>';
+        return;
+      }
+
+      const a = j.data;
+
+      const chips = [];
+      if(a.presion_arterial)       chips.push(`<div class="metric"><div class="label">TA</div><div class="value">${a.presion_arterial}</div></div>`);
+      if(a.peso)                   chips.push(`<div class="metric"><div class="label">Peso</div><div class="value">${a.peso} kg</div></div>`);
+      if(a.altura)                 chips.push(`<div class="metric"><div class="label">Altura</div><div class="value">${a.altura}</div></div>`);
+      if(a.imc)                    chips.push(`<div class="metric"><div class="label">IMC</div><div class="value">${a.imc}${a.imc_cat?` <span class="text-muted">(${a.imc_cat})</span>`:''}</div></div>`);
+      if(a.glucemia)               chips.push(`<div class="metric"><div class="label">Glucemia</div><div class="value">${a.glucemia}</div></div>`);
+      if(a.insulina_utilizada)     chips.push(`<div class="metric"><div class="label">Insulina</div><div class="value">${a.insulina_utilizada}</div></div>`);
+      if(a.hba1c)                  chips.push(`<div class="metric"><div class="label">HbA1c</div><div class="value">${a.hba1c}${a.hba1c_cat?` <span class="text-muted">(${a.hba1c_cat})</span>`:''}</div></div>`);
+      if(a.tipo_diabetes)          chips.push(`<div class="metric"><div class="label">Tipo DM</div><div class="value">${a.tipo_diabetes}</div></div>`);
+
+      // Campos específicos (notas_extra)
+      let extraHTML = '';
+      if (a.notas_extra && (typeof a.notas_extra === 'object' ? Object.keys(a.notas_extra).length : true)) {
+        if (typeof a.notas_extra === 'object') {
+          extraHTML = '<div class="row g-2">' +
+            Object.entries(a.notas_extra).map(([k,v]) =>
+              `<div class="col-12 col-md-6"><div class="p-2 border rounded">
+                 <div class="text-muted small">${k}</div><div class="fw-semibold">${v??''}</div>
+               </div></div>`).join('') +
+            '</div>';
+        } else {
+          extraHTML = `<div class="mono">${a.notas_extra}</div>`;
+        }
+      }
+
+      body.innerHTML = `
+        <div class="card mb-2">
+          <div class="card-body">
+            <div class="row g-2 small">
+              <div class="col-sm-6"><b>Fecha:</b> ${a.fecha||'—'}</div>
+              <div class="col-sm-6"><b>Especialidad:</b> ${a.especialidad||'General'}</div>
+              <div class="col-sm-6"><b>Paciente:</b> ${a.cliente_nombre||'—'}</div>
+              <div class="col-sm-6"><b>Doctor/a:</b> ${a.doctor_nombre||'—'}</div>
+            </div>
+          </div>
+        </div>
+
+        ${chips.length ? `
+        <div class="card mb-2">
+          <div class="card-body">
+            <div class="grid-metrics">${chips.join('')}</div>
+          </div>
+        </div>` : ''}
+
+        ${secCollapsable('Diagnóstico','secDiag', preview(a.diagnostico), (a.diagnostico||'—'))}
+        ${secCollapsable('Tratamiento','secTrat', preview(a.tratamiento), (a.tratamiento||'—'))}
+        ${(a.indicaciones||a.observaciones) ? secCollapsable('Indicaciones y observaciones','secIndObs',
+           preview((a.indicaciones||'') + (a.observaciones? ' — '+a.observaciones : '')),
+           (a.indicaciones?`<div>${a.indicaciones}</div>`:'') + (a.observaciones?`<hr><div>${a.observaciones}</div>`:'')) : ''}
+
+        ${a.recetas ? secCollapsable('Recetas','secRec', preview(a.recetas), a.recetas) : ''}
+        ${a.estudios_pedidos ? secCollapsable('Estudios pedidos','secEst', preview(a.estudios_pedidos), a.estudios_pedidos) : ''}
+        ${a.sintomas ? secCollapsable('Síntomas','secSint', preview(a.sintomas), a.sintomas) : ''}
+
+        ${extraHTML ? `
+        <div class="card mb-2">
+          <div class="card-body">
+            <h6 class="mb-2">Campos específicos (${a.especialidad||'General'})</h6>
+            ${extraHTML}
+          </div>
+        </div>` : ''}
+
+        <div class="card mb-2">
+          <div class="card-body small">
+            <b>Próxima cita:</b> ${a.proxima_fecha || '—'}
+          </div>
+        </div>
+      `;
+    }catch(e){
+      body.innerHTML = `<div class="text-danger">Error: ${e}</div>`;
+    }
+  }
+
+  // enganchar botones
+  document.querySelectorAll('.ver-detalle').forEach(btn=>{
+    btn.addEventListener('click', ()=> cargarDetalle(btn.dataset.id));
+  });
+})();
+</script>
+{% endblock %}

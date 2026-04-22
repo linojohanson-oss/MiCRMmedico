@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reportes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container mt-4">
+    <h2 class="mb-4">Reportes del Sistema</h2>
+
+    <div class="d-grid gap-2 col-6 mx-auto">
+        <a href="{{ url_for('reporte_clientes_dominio') }}" class="btn btn-outline-primary mb-2">Clientes por Dominio de Correo</a>
+        <a href="{{ url_for('reporte_citas_por_doctor') }}" class="btn btn-outline-info mb-2">Citas por Doctor</a>
+        <a href="{{ url_for('reporte_clientes_sin_citas') }}" class="btn btn-outline-warning mb-2">Clientes sin Citas</a>
+        <a href="{{ url_for('reporte_doctores_sin_citas') }}" class="btn btn-outline-danger mb-2">Doctores sin Citas</a>
+        <a href="{{ url_for('reporte_citas_por_cliente') }}" class="btn btn-outline-primary m-1">Citas por Cliente</a>
+        <a href="{{ url_for('inicio') }}" class="btn btn-secondary mt-4">Volver al Inicio</a>
+
+    </div>
+</div>
+</body>
+</html>

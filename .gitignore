@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Variables de entorno
+.env
+
+# Bases de datos
+*.db
+*.sqlite3
+
+# Archivos Excel / exportaciones
+*.xlsx
+*.csv
+
+# Archivos comprimidos
+*.zip
+
+# Carpetas de tu proyecto que no deben subirse
+checkpoints_dl/
+failed_html/
+
+# IDEs / editores
+.idea/
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Otros temporales
+*.tmp
+*.bak

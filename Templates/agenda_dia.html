@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agenda del día</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f5f7fb;
+        }
+
+        .top-banner {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 8px 24px rgba(13,110,253,.18);
+            margin-bottom: 1.25rem;
+        }
+
+        .top-banner small {
+            opacity: 0.95;
+        }
+
+        .agenda-card {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,.06);
+            background: #fff;
+            overflow: hidden;
+        }
+
+        .cita-card {
+            border: 1px solid #e9ecef;
+            border-radius: 1rem;
+            padding: 1rem;
+            background: #fff;
+            transition: transform .12s ease, box-shadow .12s ease;
+        }
+
+        .cita-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        }
+
+        .cita-card.atendida {
+            background: #eefaf2;
+            border-color: #bfe3c9;
+        }
+
+        .hora-box {
+            min-width: 110px;
+            text-align: center;
+            border-radius: .85rem;
+            background: #eef5ff;
+            border: 1px solid #cfe2ff;
+            padding: .8rem;
+        }
+
+        .cita-card.atendida .hora-box {
+            background: #e9f9ee;
+            border-color: #b7ebc6;
+        }
+
+        .hora {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #0d6efd;
+            line-height: 1.1;
+        }
+
+        .cita-card.atendida .hora {
+            color: #198754;
+        }
+
+        .hora-label {
+            font-size: .78rem;
+            color: #6c757d;
+            margin-top: .2rem;
+        }
+
+        .paciente {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1f3b5b;
+        }
+
+        .doctor {
+            color: #6c757d;
+            font-size: .92rem;
+        }
+
+        .descripcion-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: .85rem;
+            padding: .85rem;
+            margin-top: .8rem;
+        }
+
+        .descripcion-label {
+            font-size: .82rem;
+            color: #6c757d;
+            margin-bottom: .25rem;
+        }
+
+        .estado-badge {
+            font-size: .78rem;
+            padding: .45rem .7rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+
+        .toolbar .btn {
+            border-radius: .7rem;
+        }
+
+        .contador-box {
+            display: inline-block;
+            background: rgba(255,255,255,.18);
+            color: white;
+            border: 1px solid rgba(255,255,255,.18);
+            padding: .4rem .75rem;
+            border-radius: 999px;
+            font-size: .9rem;
+            font-weight: 600;
+        }
+
+        .empty-box {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,.06);
+            background: #fff;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .cita-layout {
+                flex-direction: column;
+            }
+
+            .hora-box {
+                width: 100%;
+                min-width: auto;
+            }
+
+            .acciones-box {
+                width: 100%;
+            }
+
+            .acciones-box .btn,
+            .acciones-box .badge {
+                width: 100%;
+                margin-top: .4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+
+    <div class="top-banner">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h3 class="mb-1">📅 Agenda del día</h3>
+                <small>{{ fecha }}</small>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 align-items-center toolbar">
+                <span class="contador-box">
+                    {{ citas|length }} cita{{ '' if citas|length == 1 else 's' }}
+                </span>
+
+                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
+                    ➕ Nueva cita
+                </button>
+
+                <a href="{{ url_for('citas.calendario') }}" class="btn btn-light btn-sm">
+                    ← Calendario
+                </a>
+
+                <a href="{{ url_for('auth.inicio') }}" class="btn btn-outline-light btn-sm">
+                    🏠 Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if citas %}
+    <div class="agenda-card p-3 p-md-4">
+        {% for c in citas %}
+        <div class="cita-card mb-3 {% if c[6] %}atendida{% endif %}">
+            <div class="d-flex justify-content-between align-items-start gap-3 cita-layout">
+
+                <div class="hora-box">
+                    <div class="hora">
+                        {{ c[1].strftime('%H:%M') if c[1] and c[1].strftime else c[1] }}
+                    </div>
+                    <div class="hora-label">Horario</div>
+                </div>
+
+                <div class="flex-grow-1">
+                    <div class="paciente">
+                        {{ c[3] }}
+                    </div>
+
+                    <div class="doctor">
+                        {{ c[5] or 'Doctor sin asignar' }}
+                    </div>
+
+                    <div class="descripcion-box">
+                        <div class="descripcion-label">Descripción</div>
+                        <div>{{ c[2] or 'Sin descripción' }}</div>
+                    </div>
+                </div>
+
+                <div class="text-md-end acciones-box">
+                    {% if c[6] %}
+                        <span class="badge bg-success estado-badge d-inline-block mb-2">
+                            ✔ Atendida
+                        </span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark estado-badge d-inline-block mb-2">
+                            Pendiente
+                        </span>
+                    {% endif %}
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('citas.ver_citas', cliente_id=c[4]) }}"
+                           class="btn btn-outline-primary btn-sm">
+                            Ver citas
+                        </a>
+
+                        <a href="{{ url_for('citas.editar_cita', cita_id=c[0]) }}"
+                           class="btn btn-warning btn-sm">
+                            Editar
+                        </a>
+
+                        <a href="{{ url_for('citas.eliminar_cita', cita_id=c[0]) }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('¿Eliminar esta cita?')">
+                            Eliminar
+                        </a>
+
+                        {% if not c[6] %}
+                        <a href="{{ url_for('atenciones.registrar_atencion', cita_id=c[0]) }}"
+                           class="btn btn-success btn-sm">
+                            Atender
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <div class="empty-box">
+            <h5 class="mb-2">No hay citas para este día</h5>
+            <p class="text-muted mb-3">Podés cargar una nueva cita o volver al calendario.</p>
+            <button class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
+                ➕ Nueva cita
+            </button>
+            <a href="{{ url_for('citas.calendario') }}" class="btn btn-primary">
+                Volver al calendario
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+
+<div class="modal fade" id="modalNuevaCita" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva cita rápida</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="errorNuevaCita" class="alert alert-danger d-none"></div>
+
+                <div class="mb-3">
+                    <label class="form-label">Cliente</label>
+                    <select id="cliente_id" class="form-select">
+                        <option value="">Seleccionar cliente</option>
+                        {% for cliente in clientes %}
+                        <option value="{{ cliente[0] }}">{{ cliente[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Doctor</label>
+                    <select id="doctor_id" class="form-select">
+                        <option value="">Seleccionar doctor</option>
+                        {% for doctor in doctores %}
+                        <option value="{{ doctor[0] }}">{{ doctor[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fecha y hora</label>
+                    <input type="datetime-local" id="fecha_cita" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Descripción</label>
+                    <input type="text" id="descripcion" class="form-control" placeholder="Motivo o descripción">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="btnGuardarCita" class="btn btn-primary">
+                    Guardar cita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const fechaBase = "{{ fecha }}";
+    const fechaInput = document.getElementById('fecha_cita');
+    if (fechaInput) {
+        fechaInput.value = fechaBase + "T09:00";
+    }
+
+    const btnGuardar = document.getElementById('btnGuardarCita');
+    const errorBox = document.getElementById('errorNuevaCita');
+
+    btnGuardar.addEventListener('click', async function () {
+        errorBox.classList.add('d-none');
+        errorBox.textContent = '';
+
+        const cliente_id = document.getElementById('cliente_id').value;
+        const doctor_id = document.getElementById('doctor_id').value;
+        const fecha = document.getElementById('fecha_cita').value;
+        const descripcion = document.getElementById('descripcion').value;
+
+        try {
+            const response = await fetch("{{ url_for('citas.crear_cita_ajax') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    cliente_id,
+                    doctor_id,
+                    fecha,
+                    descripcion
+                })
+            });
+
+            const result = await response.json();
+
+            if (!result.ok) {
+                errorBox.textContent = result.error || 'No se pudo guardar la cita.';
+                errorBox.classList.remove('d-none');
+                return;
+            }
+
+            window.location.reload();
+
+        } catch (error) {
+            errorBox.textContent = 'Ocurrió un error al guardar la cita.';
+            errorBox.classList.remove('d-none');
+        }
+    });
+});
+</script>
+
+</body>
+</html>

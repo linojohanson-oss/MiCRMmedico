@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Atenciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f5f7fb;
+        }
+
+        .card-soft {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,.06);
+            background: #fff;
+        }
+
+        .top-banner {
+            background: linear-gradient(135deg, #198754, #157347);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 8px 24px rgba(25,135,84,.18);
+        }
+
+        .table th,
+        .table td {
+            vertical-align: middle;
+        }
+
+        .texto-largo {
+            max-width: 240px;
+            white-space: pre-line;
+            word-break: break-word;
+        }
+
+        .acciones {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .badge-soft {
+            display: inline-block;
+            padding: .4rem .7rem;
+            border-radius: 999px;
+            background: #eef5ff;
+            color: #0d6efd;
+            border: 1px solid #cfe2ff;
+            font-weight: 600;
+            font-size: .85rem;
+        }
+
+        .table-responsive {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        .detalle-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 2px;
+        }
+
+        .detalle-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: .75rem;
+            padding: .85rem;
+            height: 100%;
+        }
+
+        .mono {
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 768px) {
+            .texto-largo {
+                max-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+
+    <div class="top-banner mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h2 class="mb-1">Historial de Atenciones</h2>
+                <small>Paciente: <strong>{{ cliente.nombre }}</strong></small>
+            </div>
+            <div>
+                <span class="badge-soft bg-white text-success border-0">
+                    {{ atenciones|length }} atención{{ '' if atenciones|length == 1 else 'es' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-soft">
+        <div class="card-body">
+
+            <div class="mb-3 d-flex flex-wrap gap-2">
+                <a href="{{ url_for('citas.ver_citas', cliente_id=cliente.id) }}" class="btn btn-secondary">
+                    ← Volver a Citas
+                </a>
+
+                <a href="{{ url_for('clientes.index') }}" class="btn btn-outline-dark">
+                    Clientes
+                </a>
+
+                <button class="btn btn-outline-primary" onclick="window.print()">
+                    🖨️ Imprimir
+                </button>
+            </div>
+
+            {% if atenciones %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover bg-white mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 150px;">Fecha</th>
+                            <th style="width: 170px;">Doctor</th>
+                            <th>Diagnóstico</th>
+                            <th>Tratamiento</th>
+                            <th>Observaciones</th>
+                            <th>Recetas</th>
+                            <th>Notas Extra</th>
+                            <th style="width: 140px;">Próxima Fecha</th>
+                            <th style="width: 130px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for atencion in atenciones %}
+                        <tr>
+                            <td>{{ atencion['fecha'] or '-' }}</td>
+                            <td>{{ atencion['doctor'] or '-' }}</td>
+                            <td class="texto-largo">{{ atencion['diagnostico'] or '-' }}</td>
+                            <td class="texto-largo">{{ atencion['tratamiento'] or '-' }}</td>
+                            <td class="texto-largo">{{ atencion['observaciones'] or '-' }}</td>
+                            <td class="texto-largo">{{ atencion['recetas'] or '-' }}</td>
+                            <td class="texto-largo">{{ atencion['notas_extra'] or '-' }}</td>
+                            <td>{{ atencion['proxima_fecha'] or '-' }}</td>
+                            <td>
+                                <div class="acciones">
+                                    <button type="button"
+                                            class="btn btn-sm btn-info text-white btn-ver-detalle"
+                                            data-id="{{ atencion['id'] }}">
+                                        Ver detalle
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-warning mb-0">
+                No hay atenciones registradas para este cliente.
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="detalleModal" tabindex="-1" aria-labelledby="detalleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detalleModalLabel">Detalle de Atención</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="detalleModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2">Cargando detalle...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('detalleModal');
+    const modalBody = document.getElementById('detalleModalBody');
+    const detalleModal = new bootstrap.Modal(modalElement);
+
+    function valor(v) {
+        if (v === null || v === undefined || v === '') return '—';
+        return v;
+    }
+
+    function renderNotasExtra(notasExtra) {
+        if (!notasExtra) {
+            return '<div class="text-muted">—</div>';
+        }
+
+        if (typeof notasExtra === 'object') {
+            let html = '<div class="row g-3">';
+            for (const [k, v] of Object.entries(notasExtra)) {
+                html += `
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">${k}</div>
+                            <div class="fw-semibold mono">${valor(v)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            return html;
+        }
+
+        return `<div class="mono">${valor(notasExtra)}</div>`;
+    }
+
+    function renderDetalle(data) {
+        return `
+            <div class="container-fluid">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Paciente</div>
+                            <div class="fw-semibold">${valor(data.cliente_nombre)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Doctor</div>
+                            <div class="fw-semibold">${valor(data.doctor_nombre)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Especialidad</div>
+                            <div class="fw-semibold">${valor(data.especialidad)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Fecha</div>
+                            <div class="fw-semibold">${valor(data.fecha)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Próxima fecha</div>
+                            <div class="fw-semibold">${valor(data.proxima_fecha)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Diagnóstico</div>
+                            <div class="mono">${valor(data.diagnostico)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Tratamiento</div>
+                            <div class="mono">${valor(data.tratamiento)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Síntomas</div>
+                            <div class="mono">${valor(data.sintomas)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Observaciones</div>
+                            <div class="mono">${valor(data.observaciones)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Indicaciones</div>
+                            <div class="mono">${valor(data.indicaciones)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Estudios pedidos</div>
+                            <div class="mono">${valor(data.estudios_pedidos)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Recetas</div>
+                            <div class="mono">${valor(data.recetas)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Presión arterial</div>
+                            <div class="fw-semibold">${valor(data.presion_arterial)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="detalle-box">
+                            <div class="detalle-label">TA clínica</div>
+                            <div class="fw-semibold">${valor(data.presion_arterial_clinica)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Peso</div>
+                            <div class="fw-semibold">${valor(data.peso)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Altura</div>
+                            <div class="fw-semibold">${valor(data.altura)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">IMC</div>
+                            <div class="fw-semibold">${valor(data.imc)}</div>
+                            <div class="small text-muted">${valor(data.imc_cat)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Glucemia</div>
+                            <div class="fw-semibold">${valor(data.glucemia)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Insulina utilizada</div>
+                            <div class="fw-semibold">${valor(data.insulina_utilizada)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Tipo diabetes</div>
+                            <div class="fw-semibold">${valor(data.tipo_diabetes)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">HbA1c</div>
+                            <div class="fw-semibold">${valor(data.hba1c)}</div>
+                            <div class="small text-muted">${valor(data.hba1c_cat)}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detalle-box">
+                            <div class="detalle-label">Notas clínicas</div>
+                            <div class="mono">${valor(data.notas_clinica)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detalle-box">
+                    <div class="detalle-label">Campos específicos</div>
+                    ${renderNotasExtra(data.notas_extra)}
+                </div>
+            </div>
+        `;
+    }
+
+    document.querySelectorAll('.btn-ver-detalle').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const atencionId = this.dataset.id;
+
+            modalBody.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2">Cargando detalle...</div>
+                </div>
+            `;
+
+            detalleModal.show();
+
+            try {
+                const response = await fetch(`/atencion/${atencionId}/detalle`);
+                const result = await response.json();
+
+                if (!result.ok) {
+                    modalBody.innerHTML = `
+                        <div class="alert alert-danger mb-0">
+                            No se pudo cargar el detalle: ${valor(result.error)}
+                        </div>
+                    `;
+                    return;
+                }
+
+                modalBody.innerHTML = renderDetalle(result.data);
+
+            } catch (error) {
+                modalBody.innerHTML = `
+                    <div class="alert alert-danger mb-0">
+                        Error al cargar el detalle.
+                    </div>
+                `;
+            }
+        });
+    });
+});
+</script>
+
+</body>
+</html>
