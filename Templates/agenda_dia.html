@@ -1,282 +1,296 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Agenda del día</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% extends 'base.html' %}
 
-    <style>
-        body {
-            background: #f5f7fb;
-        }
+{% block title %}Agenda del día | CRM Médico{% endblock %}
 
-        .top-banner {
-            background: linear-gradient(135deg, #0d6efd, #0a58ca);
-            color: white;
-            border-radius: 1rem;
-            padding: 1.25rem 1.5rem;
-            box-shadow: 0 8px 24px rgba(13,110,253,.18);
-            margin-bottom: 1.25rem;
-        }
+{% block content %}
 
-        .top-banner small {
-            opacity: 0.95;
-        }
+<style>
+    .top-banner {
+        background: linear-gradient(135deg, #3498db, #2c3e50);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+        margin-bottom: 24px;
+    }
 
-        .agenda-card {
-            border: 0;
-            border-radius: 1rem;
-            box-shadow: 0 8px 24px rgba(0,0,0,.06);
-            background: #fff;
-            overflow: hidden;
-        }
+    .top-banner h1 {
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
 
-        .cita-card {
-            border: 1px solid #e9ecef;
-            border-radius: 1rem;
-            padding: 1rem;
-            background: #fff;
-            transition: transform .12s ease, box-shadow .12s ease;
-        }
+    .metric-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        height: 100%;
+        border-left: 6px solid #3498db;
+    }
 
-        .cita-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(0,0,0,.08);
-        }
+    .metric-label {
+        color: #6c757d;
+        font-weight: 700;
+        font-size: .9rem;
+    }
 
-        .cita-card.atendida {
-            background: #eefaf2;
-            border-color: #bfe3c9;
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+    }
+
+    .agenda-card {
+        background: white;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    }
+
+    .cita-card {
+        border-radius: 18px;
+        padding: 20px;
+        background: #f8f9fb;
+        border-left: 6px solid #f39c12;
+        margin-bottom: 18px;
+        transition: all .2s ease;
+    }
+
+    .cita-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 22px rgba(0,0,0,.12);
+    }
+
+    .cita-card.atendida {
+        border-left-color: #198754;
+        background: #e9f9ee;
+    }
+
+    .hora-box {
+        min-width: 120px;
+        text-align: center;
+        border-radius: 16px;
+        background: white;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,.06);
+    }
+
+    .hora {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #3498db;
+    }
+
+    .paciente {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #2c3e50;
+    }
+
+    .doctor {
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    .descripcion-box {
+        background: white;
+        border-radius: 14px;
+        padding: 14px;
+        margin-top: 12px;
+    }
+
+    .acciones-box .btn,
+    .acciones-box .badge {
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .empty-box {
+        background: white;
+        border-radius: 22px;
+        padding: 45px;
+        text-align: center;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    }
+
+    @media (max-width: 768px) {
+        .cita-layout {
+            flex-direction: column;
         }
 
         .hora-box {
-            min-width: 110px;
-            text-align: center;
-            border-radius: .85rem;
-            background: #eef5ff;
-            border: 1px solid #cfe2ff;
-            padding: .8rem;
+            width: 100%;
         }
 
-        .cita-card.atendida .hora-box {
-            background: #e9f9ee;
-            border-color: #b7ebc6;
+        .acciones-box,
+        .acciones-box .btn {
+            width: 100%;
         }
+    }
+</style>
 
-        .hora {
-            font-size: 1.35rem;
-            font-weight: 700;
-            color: #0d6efd;
-            line-height: 1.1;
-        }
-
-        .cita-card.atendida .hora {
-            color: #198754;
-        }
-
-        .hora-label {
-            font-size: .78rem;
-            color: #6c757d;
-            margin-top: .2rem;
-        }
-
-        .paciente {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #1f3b5b;
-        }
-
-        .doctor {
-            color: #6c757d;
-            font-size: .92rem;
-        }
-
-        .descripcion-box {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: .85rem;
-            padding: .85rem;
-            margin-top: .8rem;
-        }
-
-        .descripcion-label {
-            font-size: .82rem;
-            color: #6c757d;
-            margin-bottom: .25rem;
-        }
-
-        .estado-badge {
-            font-size: .78rem;
-            padding: .45rem .7rem;
-            border-radius: 999px;
-            font-weight: 600;
-        }
-
-        .toolbar .btn {
-            border-radius: .7rem;
-        }
-
-        .contador-box {
-            display: inline-block;
-            background: rgba(255,255,255,.18);
-            color: white;
-            border: 1px solid rgba(255,255,255,.18);
-            padding: .4rem .75rem;
-            border-radius: 999px;
-            font-size: .9rem;
-            font-weight: 600;
-        }
-
-        .empty-box {
-            border: 0;
-            border-radius: 1rem;
-            box-shadow: 0 8px 24px rgba(0,0,0,.06);
-            background: #fff;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .cita-layout {
-                flex-direction: column;
-            }
-
-            .hora-box {
-                width: 100%;
-                min-width: auto;
-            }
-
-            .acciones-box {
-                width: 100%;
-            }
-
-            .acciones-box .btn,
-            .acciones-box .badge {
-                width: 100%;
-                margin-top: .4rem;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container py-4">
-
-    <div class="top-banner">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div>
-                <h3 class="mb-1">📅 Agenda del día</h3>
-                <small>{{ fecha }}</small>
-            </div>
-
-            <div class="d-flex flex-wrap gap-2 align-items-center toolbar">
-                <span class="contador-box">
-                    {{ citas|length }} cita{{ '' if citas|length == 1 else 's' }}
-                </span>
-
-                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
-                    ➕ Nueva cita
-                </button>
-
-                <a href="{{ url_for('citas.calendario') }}" class="btn btn-light btn-sm">
-                    ← Calendario
-                </a>
-
-                <a href="{{ url_for('auth.inicio') }}" class="btn btn-outline-light btn-sm">
-                    🏠 Inicio
-                </a>
-            </div>
+<div class="top-banner">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1>Agenda del día</h1>
+            <p class="mb-0">{{ fecha }}</p>
         </div>
-    </div>
 
-    {% if citas %}
-    <div class="agenda-card p-3 p-md-4">
-        {% for c in citas %}
-        <div class="cita-card mb-3 {% if c[6] %}atendida{% endif %}">
-            <div class="d-flex justify-content-between align-items-start gap-3 cita-layout">
-
-                <div class="hora-box">
-                    <div class="hora">
-                        {{ c[1].strftime('%H:%M') if c[1] and c[1].strftime else c[1] }}
-                    </div>
-                    <div class="hora-label">Horario</div>
-                </div>
-
-                <div class="flex-grow-1">
-                    <div class="paciente">
-                        {{ c[3] }}
-                    </div>
-
-                    <div class="doctor">
-                        {{ c[5] or 'Doctor sin asignar' }}
-                    </div>
-
-                    <div class="descripcion-box">
-                        <div class="descripcion-label">Descripción</div>
-                        <div>{{ c[2] or 'Sin descripción' }}</div>
-                    </div>
-                </div>
-
-                <div class="text-md-end acciones-box">
-                    {% if c[6] %}
-                        <span class="badge bg-success estado-badge d-inline-block mb-2">
-                            ✔ Atendida
-                        </span>
-                    {% else %}
-                        <span class="badge bg-warning text-dark estado-badge d-inline-block mb-2">
-                            Pendiente
-                        </span>
-                    {% endif %}
-
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('citas.ver_citas', cliente_id=c[4]) }}"
-                           class="btn btn-outline-primary btn-sm">
-                            Ver citas
-                        </a>
-
-                        <a href="{{ url_for('citas.editar_cita', cita_id=c[0]) }}"
-                           class="btn btn-warning btn-sm">
-                            Editar
-                        </a>
-
-                        <a href="{{ url_for('citas.eliminar_cita', cita_id=c[0]) }}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('¿Eliminar esta cita?')">
-                            Eliminar
-                        </a>
-
-                        {% if not c[6] %}
-                        <a href="{{ url_for('atenciones.registrar_atencion', cita_id=c[0]) }}"
-                           class="btn btn-success btn-sm">
-                            Atender
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-        <div class="empty-box">
-            <h5 class="mb-2">No hay citas para este día</h5>
-            <p class="text-muted mb-3">Podés cargar una nueva cita o volver al calendario.</p>
-            <button class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
                 ➕ Nueva cita
             </button>
-            <a href="{{ url_for('citas.calendario') }}" class="btn btn-primary">
-                Volver al calendario
+
+            <a href="{{ url_for('citas.calendario') }}" class="btn btn-light">
+                ← Calendario
             </a>
         </div>
-    {% endif %}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Total citas</div>
+            <div class="metric-value">{{ total_citas }}</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Atendidas</div>
+            <div class="metric-value text-success">{{ atendidas }}</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Pendientes</div>
+            <div class="metric-value text-warning">{{ pendientes }}</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-label">Próxima cita</div>
+
+            {% if proxima_cita %}
+                <div class="fw-bold text-dark">{{ proxima_cita[3] }}</div>
+                <div class="text-primary fw-bold">
+                    {{ proxima_cita[1].strftime('%H:%M') if proxima_cita[1] and proxima_cita[1].strftime else proxima_cita[1] }}
+                </div>
+            {% else %}
+                <div class="fw-bold text-success">Día completo ✔</div>
+            {% endif %}
+        </div>
+    </div>
 
 </div>
 
-<div class="modal fade" id="modalNuevaCita" tabindex="-1" aria-hidden="true">
+{% if citas %}
+
+<div class="agenda-card">
+
+    {% for c in citas %}
+
+    <div class="cita-card {% if c[6] %}atendida{% endif %}">
+
+        <div class="d-flex justify-content-between align-items-start gap-4 cita-layout">
+
+            <div class="hora-box">
+                <div class="hora">
+                    {{ c[1].strftime('%H:%M') if c[1] and c[1].strftime else c[1] }}
+                </div>
+                <div class="text-muted small">Horario</div>
+            </div>
+
+            <div class="flex-grow-1">
+                <div class="paciente">
+                    <i class="fa-solid fa-user"></i>
+                    {{ c[3] }}
+                </div>
+
+                <div class="doctor">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    {{ c[5] or 'Doctor sin asignar' }}
+                </div>
+
+                <div class="descripcion-box">
+                    <div class="text-muted small fw-bold">Descripción</div>
+                    <div>{{ c[2] or 'Sin descripción' }}</div>
+                </div>
+            </div>
+
+            <div class="acciones-box text-md-end">
+
+                {% if c[6] %}
+                    <span class="badge bg-success mb-2">
+                        ✔ Atendida
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning text-dark mb-2">
+                        Pendiente
+                    </span>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('citas.ver_citas', cliente_id=c[4]) }}"
+                       class="btn btn-outline-primary btn-sm">
+                        Ver citas
+                    </a>
+
+                    <a href="{{ url_for('citas.editar_cita', cita_id=c[0]) }}"
+                       class="btn btn-warning btn-sm">
+                        Editar
+                    </a>
+
+                    {% if not c[6] %}
+                    <a href="{{ url_for('atenciones.registrar_atencion', cita_id=c[0]) }}"
+                       class="btn btn-success btn-sm">
+                        Atender
+                    </a>
+                    {% endif %}
+
+                    <a href="{{ url_for('citas.eliminar_cita', cita_id=c[0]) }}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('¿Eliminar esta cita?')">
+                        Eliminar
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="empty-box">
+    <h4>No hay citas para este día</h4>
+    <p class="text-muted">Podés cargar una nueva cita o volver al calendario.</p>
+
+    <button class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modalNuevaCita">
+        ➕ Nueva cita
+    </button>
+
+    <a href="{{ url_for('citas.calendario') }}" class="btn btn-primary">
+        Volver al calendario
+    </a>
+</div>
+
+{% endif %}
+
+<!-- MODAL NUEVA CITA -->
+<div class="modal fade" id="modalNuevaCita" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content">
+        <div class="modal-content rounded-4">
+
             <div class="modal-header">
                 <h5 class="modal-title">Nueva cita rápida</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -321,16 +335,16 @@
                     Guardar cita
                 </button>
             </div>
+
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const fechaBase = "{{ fecha }}";
     const fechaInput = document.getElementById('fecha_cita');
+
     if (fechaInput) {
         fechaInput.value = fechaBase + "T09:00";
     }
@@ -379,5 +393,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-</body>
-</html>
+{% endblock %}

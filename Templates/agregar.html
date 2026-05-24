@@ -1,26 +1,124 @@
 {% extends 'base.html' %}
 
+{% block title %}Agregar Paciente | CRM Médico{% endblock %}
+
 {% block content %}
-<h4>Agregar Cliente</h4>
 
-<form method="POST">
-    <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input type="text" class="form-control" name="nombre" required>
-    </div>
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #3498db, #2c3e50);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
 
-    <div class="mb-3">
-        <label class="form-label">Correo</label>
-        <input type="email" class="form-control" name="correo" required>
-    </div>
+    .form-header h1 {
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
 
-    <div class="mb-3">
-        <label class="form-label">Teléfono</label>
-        <input type="text" class="form-control" name="telefono" required>
-    </div>
+    .form-card {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        border-left: 6px solid #3498db;
+    }
 
-    <button type="submit" class="btn btn-success">Guardar</button>
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+    }
 
-    <a href="{{ url_for('clientes.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
-</form>
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 .2rem rgba(52,152,219,.2);
+    }
+
+    .actions-bar {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        border-radius: 12px;
+        padding: 11px 20px;
+        font-weight: 700;
+    }
+</style>
+
+<div class="form-header">
+    <h1>Agregar Paciente</h1>
+    <p class="mb-0">Registrar un nuevo paciente en el CRM Médico.</p>
+</div>
+
+<div class="form-card">
+
+    <form method="POST">
+
+        <div class="row g-3">
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fa-solid fa-user"></i>
+                    Nombre
+                </label>
+                <input type="text"
+                       class="form-control"
+                       name="nombre"
+                       placeholder="Nombre completo"
+                       required>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fa-solid fa-envelope"></i>
+                    Correo
+                </label>
+                <input type="email"
+                       class="form-control"
+                       name="correo"
+                       placeholder="correo@ejemplo.com"
+                       required>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fa-solid fa-phone"></i>
+                    Teléfono
+                </label>
+                <input type="text"
+                       class="form-control"
+                       name="telefono"
+                       placeholder="Teléfono de contacto"
+                       required>
+            </div>
+
+        </div>
+
+        <div class="actions-bar">
+            <a href="{{ url_for('clientes.index') }}"
+               class="btn btn-outline-secondary btn-action">
+                ↩ Cancelar
+            </a>
+
+            <button type="submit"
+                    class="btn btn-success btn-action">
+                💾 Guardar paciente
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
 {% endblock %}

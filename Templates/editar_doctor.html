@@ -1,32 +1,183 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Editar Doctor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+{% extends 'base.html' %}
 
-<div class="container mt-4">
-    <h2 class="mb-4">Editar Doctor</h2>
+{% block title %}Editar Doctor | CRM Médico{% endblock %}
 
-    <form method="post">
-        <div class="mb-3">
-            <label for="nombre" class="form-label">Nombre</label>
-            <input type="text" class="form-control" id="nombre" name="nombre" value="{{ doctor[1] }}" required>
-        </div>
+{% block content %}
 
-        <div class="mb-3">
-            <label for="especialidad" class="form-label">Especialidad</label>
-            <input type="text" class="form-control" id="especialidad" name="especialidad" value="{{ doctor[2] }}">
-        </div>
+<style>
 
-        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+    .form-header {
+        background: linear-gradient(135deg, #f39c12, #d35400);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
 
-        <a href="{{ url_for('doctores.gestionar_doctores') }}" class="btn btn-secondary">Cancelar</a>
-    </form>
+    .form-header h1 {
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .doctor-id {
+        display: inline-block;
+        background: rgba(255,255,255,.18);
+        border: 1px solid rgba(255,255,255,.25);
+        padding: 8px 14px;
+        border-radius: 999px;
+        margin-top: 10px;
+        font-weight: 700;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        border-left: 6px solid #f39c12;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 .2rem rgba(243,156,18,.2);
+    }
+
+    .actions-bar {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        border-radius: 12px;
+        padding: 11px 20px;
+        font-weight: 700;
+    }
+
+</style>
+
+<div class="form-header">
+
+    <h1>Editar Doctor</h1>
+
+    <p class="mb-0">
+        Modificar información del profesional médico.
+    </p>
+
+    <div class="doctor-id">
+        ID Doctor: #{{ doctor[0] }}
+    </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<div class="form-card">
+
+    <form method="POST">
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+
+                <label class="form-label">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    Nombre del doctor
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       name="nombre"
+                       value="{{ doctor[1] }}"
+                       required>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <label class="form-label">
+                    <i class="fa-solid fa-stethoscope"></i>
+                    Especialidad
+                </label>
+
+                <select class="form-select"
+                        name="especialidad"
+                        required>
+
+                    <option {% if doctor[2] == 'Clínica' %}selected{% endif %}>
+                        Clínica
+                    </option>
+
+                    <option {% if doctor[2] == 'Cardiología' %}selected{% endif %}>
+                        Cardiología
+                    </option>
+
+                    <option {% if doctor[2] == 'Endocrinología' %}selected{% endif %}>
+                        Endocrinología
+                    </option>
+
+                    <option {% if doctor[2] == 'Neurología' %}selected{% endif %}>
+                        Neurología
+                    </option>
+
+                    <option {% if doctor[2] == 'Oftalmología' %}selected{% endif %}>
+                        Oftalmología
+                    </option>
+
+                    <option {% if doctor[2] == 'Pediatría' %}selected{% endif %}>
+                        Pediatría
+                    </option>
+
+                    <option {% if doctor[2] == 'Dermatología' %}selected{% endif %}>
+                        Dermatología
+                    </option>
+
+                    <option {% if doctor[2] == 'Traumatología' %}selected{% endif %}>
+                        Traumatología
+                    </option>
+
+                    <option {% if doctor[2] == 'Ginecología' %}selected{% endif %}>
+                        Ginecología
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <div class="actions-bar">
+
+            <a href="{{ url_for('doctores.gestionar_doctores') }}"
+               class="btn btn-outline-secondary btn-action">
+
+                ↩ Cancelar
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-warning text-white btn-action">
+
+                ✏️ Guardar cambios
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

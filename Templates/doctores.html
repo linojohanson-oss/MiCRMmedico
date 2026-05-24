@@ -1,47 +1,226 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Gestión de Doctores</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
-<body class="bg-light">
+{% extends 'base.html' %}
 
-<div class="container mt-4">
-    <h2 class="mb-4">Listado de Doctores</h2>
+{% block title %}Doctores | CRM Médico{% endblock %}
 
-    <a href="{{ url_for('doctores.agregar_doctor') }}" class="btn btn-primary mb-3">Agregar Doctor</a>
+{% block content %}
 
-    <a href="{{ url_for('auth.inicio') }}" class="btn btn-secondary mb-3">Volver al Inicio</a>
+<style>
 
-    <table class="table table-bordered bg-white">
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .page-title h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 6px;
+    }
+
+    .page-title p {
+        color: #6c757d;
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .btn-add {
+        border-radius: 14px;
+        padding: 14px 24px;
+        font-weight: 700;
+        font-size: 1rem;
+        box-shadow: 0 6px 18px rgba(25,135,84,.18);
+    }
+
+    .search-card {
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 28px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        overflow-x: auto;
+    }
+
+    .table thead {
+        background: #2c3e50;
+        color: white;
+    }
+
+    .table thead th {
+        padding: 16px;
+        border: none;
+        font-size: 1rem;
+    }
+
+    .table tbody td {
+        padding: 18px 14px;
+        vertical-align: middle;
+        border-color: #edf0f5;
+    }
+
+    .doctor-avatar {
+        width: 48px;
+        height: 48px;
+        background: #eef4ff;
+        color: #5b8def;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 12px;
+    }
+
+    .doctor-name {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1.05rem;
+    }
+
+    .speciality-badge {
+        background: #eef5ff;
+        color: #3498db;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: .9rem;
+        display: inline-block;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        border-radius: 10px;
+        font-weight: 700;
+        padding: 8px 14px;
+        font-size: .88rem;
+    }
+
+    .id-badge {
+        background: #f4f7fb;
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-weight: 700;
+        color: #5b8def;
+        display: inline-block;
+    }
+
+</style>
+
+<div class="page-header">
+
+    <div class="page-title">
+        <h1>Doctores</h1>
+        <p>Gestión profesional de médicos y especialidades.</p>
+    </div>
+
+    <a href="{{ url_for('doctores.agregar_doctor') }}"
+       class="btn btn-success btn-add">
+
+        <i class="fa-solid fa-user-doctor"></i>
+        Agregar Doctor
+
+    </a>
+
+</div>
+
+<div class="table-card">
+
+    <table class="table align-middle">
+
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Nombre</th>
+                <th>Doctor</th>
                 <th>Especialidad</th>
                 <th>Acciones</th>
             </tr>
         </thead>
+
         <tbody>
+
             {% for doctor in doctores %}
+
             <tr>
-                <td>{{ doctor[0] }}</td>
-                <td>{{ doctor[1] }}</td>
-                <td>{{ doctor[2] }}</td>
+
                 <td>
-                    <a href="{{ url_for('doctores.editar_doctor', id=doctor[0]) }}" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="{{ url_for('doctores.eliminar_doctor', id=doctor[0]) }}"
-                       class="btn btn-sm btn-danger"
-                       onclick="return confirm('¿Estás seguro de eliminar este doctor?')">
-                        Eliminar
-                    </a>
+                    <span class="id-badge">
+                        #{{ doctor[0] }}
+                    </span>
                 </td>
+
+                <td>
+
+                    <div class="d-flex align-items-center">
+
+                        <div class="doctor-avatar">
+                            <i class="fa-solid fa-user-doctor"></i>
+                        </div>
+
+                        <div class="doctor-name">
+                            {{ doctor[1] }}
+                        </div>
+
+                    </div>
+
+                </td>
+
+                <td>
+
+                    <span class="speciality-badge">
+                        {{ doctor[2] }}
+                    </span>
+
+                </td>
+
+                <td>
+
+                    <div class="action-buttons">
+
+                        <a href="{{ url_for('doctores.editar_doctor', id=doctor[0]) }}"
+                           class="btn btn-warning btn-action">
+
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            Editar
+
+                        </a>
+
+                        <a href="{{ url_for('doctores.eliminar_doctor', id=doctor[0]) }}"
+                           class="btn btn-danger btn-action"
+                           onclick="return confirm('¿Eliminar este doctor?')">
+
+                            <i class="fa-solid fa-trash"></i>
+                            Eliminar
+
+                        </a>
+
+                    </div>
+
+                </td>
+
             </tr>
+
             {% endfor %}
+
         </tbody>
+
     </table>
+
 </div>
 
-</body>
-</html>
+{% endblock %}

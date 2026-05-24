@@ -1,23 +1,247 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reportes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container mt-4">
-    <h2 class="mb-4">Reportes del Sistema</h2>
+{% extends "base.html" %}
 
-    <div class="d-grid gap-2 col-6 mx-auto">
-        <a href="{{ url_for('reporte_clientes_dominio') }}" class="btn btn-outline-primary mb-2">Clientes por Dominio de Correo</a>
-        <a href="{{ url_for('reporte_citas_por_doctor') }}" class="btn btn-outline-info mb-2">Citas por Doctor</a>
-        <a href="{{ url_for('reporte_clientes_sin_citas') }}" class="btn btn-outline-warning mb-2">Clientes sin Citas</a>
-        <a href="{{ url_for('reporte_doctores_sin_citas') }}" class="btn btn-outline-danger mb-2">Doctores sin Citas</a>
-        <a href="{{ url_for('reporte_citas_por_cliente') }}" class="btn btn-outline-primary m-1">Citas por Cliente</a>
-        <a href="{{ url_for('inicio') }}" class="btn btn-secondary mt-4">Volver al Inicio</a>
+{% block title %}Reportes | CRM Médico{% endblock %}
 
-    </div>
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    .dashboard-header {
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h1 {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .dashboard-header p {
+        color: #6c757d;
+        margin-bottom: 18px;
+    }
+
+    .btn-exportar {
+        border-radius: 12px;
+        padding: 10px 18px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        border-left: 6px solid #3498db;
+        transition: all .25s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0,0,0,.12);
+    }
+
+    .metric-card h2 {
+        font-size: 38px;
+        font-weight: 700;
+        color: #3498db;
+        margin-bottom: 5px;
+    }
+
+    .metric-card p {
+        margin: 0;
+        color: #555;
+        font-weight: 600;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        margin-top: 25px;
+    }
+
+    .chart-card h3 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 18px;
+        padding: 25px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        margin-top: 25px;
+    }
+
+    .table-card h3 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    th {
+        background: #2c3e50 !important;
+        color: white !important;
+    }
+
+    canvas {
+        max-height: 360px;
+    }
+</style>
+
+<div class="dashboard-header">
+    <h1>Dashboard de Reportes</h1>
+    <p>Resumen general de actividad del CRM Médico</p>
+
+    <a href="{{ url_for('reportes.exportar_excel') }}"
+       class="btn btn-success btn-exportar">
+        ⬇ Exportar Reporte Excel
+    </a>
 </div>
-</body>
-</html>
+
+<div class="row g-4">
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <h2>{{ total_clientes }}</h2>
+            <p>Pacientes</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <h2>{{ total_doctores }}</h2>
+            <p>Doctores</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <h2>{{ total_citas }}</h2>
+            <p>Citas</p>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="metric-card">
+            <h2>{{ total_atenciones }}</h2>
+            <p>Atenciones</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h3>Atenciones por especialidad</h3>
+            <canvas id="graficoEspecialidades"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h3>Citas por mes</h3>
+            <canvas id="graficoCitasMes"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<div class="table-card">
+    <h3>Detalle por especialidad</h3>
+
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Especialidad</th>
+                <th>Total de atenciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in atenciones_por_especialidad %}
+            <tr>
+                <td>{{ item.especialidad }}</td>
+                <td>{{ item.total }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="2">Todavía no hay atenciones registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const especialidadesLabels = [
+        {% for item in atenciones_por_especialidad %}
+            "{{ item.especialidad }}",
+        {% endfor %}
+    ];
+
+    const especialidadesData = [
+        {% for item in atenciones_por_especialidad %}
+            {{ item.total }},
+        {% endfor %}
+    ];
+
+    const citasMesLabels = [
+        {% for item in citas_por_mes %}
+            "{{ item.mes }}",
+        {% endfor %}
+    ];
+
+    const citasMesData = [
+        {% for item in citas_por_mes %}
+            {{ item.total }},
+        {% endfor %}
+    ];
+
+    new Chart(document.getElementById('graficoEspecialidades'), {
+        type: 'bar',
+        data: {
+            labels: especialidadesLabels,
+            datasets: [{
+                label: 'Atenciones',
+                data: especialidadesData,
+                backgroundColor: '#3498db',
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('graficoCitasMes'), {
+        type: 'line',
+        data: {
+            labels: citasMesLabels,
+            datasets: [{
+                label: 'Citas',
+                data: citasMesData,
+                borderColor: '#2c3e50',
+                backgroundColor: 'rgba(52, 152, 219, 0.15)',
+                fill: true,
+                tension: 0.35
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+</script>
+
+{% endblock %}

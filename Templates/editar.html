@@ -1,26 +1,143 @@
 {% extends 'base.html' %}
 
+{% block title %}Editar Paciente | CRM Médico{% endblock %}
+
 {% block content %}
-<h4>Editar Cliente</h4>
 
-<form method="POST">
-    <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input type="text" class="form-control" name="nombre" value="{{ cliente[1] }}" required>
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #f39c12, #d35400);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
+
+    .form-header h1 {
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        border-left: 6px solid #f39c12;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 .2rem rgba(243,156,18,.2);
+    }
+
+    .patient-id {
+        display: inline-block;
+        background: rgba(255,255,255,.2);
+        border: 1px solid rgba(255,255,255,.3);
+        border-radius: 999px;
+        padding: 7px 12px;
+        margin-top: 10px;
+        font-weight: 700;
+    }
+
+    .actions-bar {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        border-radius: 12px;
+        padding: 11px 20px;
+        font-weight: 700;
+    }
+</style>
+
+<div class="form-header">
+    <h1>Editar Paciente</h1>
+    <p class="mb-0">Modificar información del paciente registrado.</p>
+
+    <div class="patient-id">
+        ID Paciente: #{{ cliente[0] }}
     </div>
+</div>
 
-    <div class="mb-3">
-        <label class="form-label">Correo</label>
-        <input type="email" class="form-control" name="correo" value="{{ cliente[2] }}" required>
-    </div>
+<div class="form-card">
 
-    <div class="mb-3">
-        <label class="form-label">Teléfono</label>
-        <input type="text" class="form-control" name="telefono" value="{{ cliente[3] }}" required>
-    </div>
+    <form method="POST">
 
-    <button type="submit" class="btn btn-primary">Actualizar</button>
+        <div class="row g-3">
 
-    <a href="{{ url_for('clientes.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
-</form>
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fa-solid fa-user"></i>
+                    Nombre
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       name="nombre"
+                       value="{{ cliente[1] }}"
+                       required>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fa-solid fa-envelope"></i>
+                    Correo
+                </label>
+
+                <input type="email"
+                       class="form-control"
+                       name="correo"
+                       value="{{ cliente[2] }}"
+                       required>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fa-solid fa-phone"></i>
+                    Teléfono
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       name="telefono"
+                       value="{{ cliente[3] }}"
+                       required>
+            </div>
+
+        </div>
+
+        <div class="actions-bar">
+
+            <a href="{{ url_for('clientes.index') }}"
+               class="btn btn-outline-secondary btn-action">
+                ↩ Cancelar
+            </a>
+
+            <button type="submit"
+                    class="btn btn-warning btn-action text-white">
+                ✏️ Actualizar paciente
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
 {% endblock %}

@@ -1,20 +1,147 @@
 {% extends 'base.html' %}
 
+{% block title %}Agregar Doctor | CRM Médico{% endblock %}
+
 {% block content %}
-<h4>Agregar Doctor</h4>
 
-<form method="POST">
-    <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <input type="text" class="form-control" name="nombre" required>
-    </div>
+<style>
 
-    <div class="mb-3">
-        <label class="form-label">Especialidad</label>
-        <input type="text" class="form-control" name="especialidad" required>
-    </div>
+    .form-header {
+        background: linear-gradient(135deg, #16a085, #2c3e50);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
 
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <a href="{{ url_for('doctores.gestionar_doctores') }}" class="btn btn-secondary">Cancelar</a>
-</form>
+    .form-header h1 {
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 18px;
+        padding: 30px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        border-left: 6px solid #16a085;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 12px;
+        padding: 12px 14px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 .2rem rgba(22,160,133,.2);
+    }
+
+    .actions-bar {
+        margin-top: 25px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        border-radius: 12px;
+        padding: 11px 20px;
+        font-weight: 700;
+    }
+
+</style>
+
+<div class="form-header">
+
+    <h1>Agregar Doctor</h1>
+
+    <p class="mb-0">
+        Registrar un nuevo profesional médico en el CRM.
+    </p>
+
+</div>
+
+<div class="form-card">
+
+    <form method="POST">
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+
+                <label class="form-label">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    Nombre del doctor
+                </label>
+
+                <input type="text"
+                       class="form-control"
+                       name="nombre"
+                       placeholder="Ej: Dr. Juan Pérez"
+                       required>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <label class="form-label">
+                    <i class="fa-solid fa-stethoscope"></i>
+                    Especialidad
+                </label>
+
+                <select class="form-select"
+                        name="especialidad"
+                        required>
+
+                    <option value="">
+                        Seleccionar especialidad
+                    </option>
+
+                    <option>Clínica</option>
+                    <option>Cardiología</option>
+                    <option>Endocrinología</option>
+                    <option>Neurología</option>
+                    <option>Oftalmología</option>
+                    <option>Pediatría</option>
+                    <option>Dermatología</option>
+                    <option>Traumatología</option>
+                    <option>Ginecología</option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+        <div class="actions-bar">
+
+            <a href="{{ url_for('doctores.gestionar_doctores') }}"
+               class="btn btn-outline-secondary btn-action">
+
+                ↩ Cancelar
+
+            </a>
+
+            <button type="submit"
+                    class="btn btn-success btn-action">
+
+                💾 Guardar doctor
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
 {% endblock %}

@@ -1,403 +1,385 @@
 {% extends 'base.html' %}
 
+{% block title %}Detalle de Atención | CRM Médico{% endblock %}
+
 {% block content %}
+
 <style>
-  body {
-      background: #f5f7fb;
-  }
-
-  .card-soft {
-      border: 0;
-      border-radius: 1rem;
-      box-shadow: 0 8px 24px rgba(0,0,0,.06);
-      background: #fff;
-  }
-
-  .section-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #1f3b5b;
-      margin-bottom: 1rem;
-  }
-
-  .kv {
-      display: grid;
-      grid-template-columns: 180px 1fr;
-      gap: .45rem .85rem;
-  }
-
-  .pill {
-      display: inline-block;
-      border: 1px solid #cfe2ff;
-      color: #0d6efd;
-      background: #eef5ff;
-      padding: .25rem .65rem;
-      border-radius: 999px;
-      font-weight: 600;
-  }
-
-  .mono {
-      white-space: pre-wrap;
-      line-height: 1.55;
-  }
-
-  .metric-box {
-      border: 1px solid #e9ecef;
-      border-radius: .75rem;
-      padding: .95rem;
-      text-align: center;
-      background: #fff;
-      height: 100%;
-  }
-
-  .metric-label {
-      color: #6c757d;
-      font-size: .85rem;
-  }
-
-  .metric-value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-top: .2rem;
-  }
-
-  .top-banner {
-      background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  .detalle-header {
+      background: linear-gradient(135deg, #3498db, #2c3e50);
       color: white;
-      border-radius: 1rem;
-      padding: 1.25rem 1.5rem;
-      box-shadow: 0 8px 24px rgba(13,110,253,.18);
+      border-radius: 22px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  }
+
+  .detalle-header h1 {
+      font-weight: 800;
+      margin-bottom: 8px;
   }
 
   .info-chip {
       display: inline-block;
       background: rgba(255,255,255,.18);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,.18);
-      padding: .35rem .7rem;
+      border: 1px solid rgba(255,255,255,.25);
+      padding: 7px 12px;
       border-radius: 999px;
-      font-size: .9rem;
-      margin-right: .4rem;
-      margin-top: .3rem;
+      margin-right: 6px;
+      margin-top: 6px;
+      font-weight: 600;
+  }
+
+  .card-soft {
+      background: white;
+      border: none;
+      border-radius: 18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+      border-left: 6px solid #3498db;
+  }
+
+  .section-title {
+      font-weight: 800;
+      color: #2c3e50;
+      margin-bottom: 18px;
+      font-size: 1.35rem;
   }
 
   .subtle-box {
-      border: 1px solid #e9ecef;
-      border-radius: .85rem;
-      background: #f8f9fa;
-      padding: 1rem;
+      background: #f4f7fb;
+      border-radius: 14px;
+      padding: 16px;
       height: 100%;
   }
 
-  .print-hide {
-      display: inline-block;
+  .label-soft {
+      color: #6c757d;
+      font-size: .85rem;
+      font-weight: 700;
   }
 
-  @media (max-width: 768px) {
-      .kv {
-          grid-template-columns: 1fr;
-      }
+  .value-soft {
+      color: #2c3e50;
+      font-weight: 800;
+      font-size: 1.05rem;
+  }
+
+  .metric-box {
+      background: #f8f9fb;
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      height: 100%;
+      border: 1px solid #e9ecef;
+  }
+
+  .metric-label {
+      color: #6c757d;
+      font-size: .85rem;
+      font-weight: 700;
+  }
+
+  .metric-value {
+      color: #2c3e50;
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-top: 4px;
+  }
+
+  .mono {
+      white-space: pre-wrap;
+      line-height: 1.6;
+      color: #2c3e50;
+  }
+
+  .actions-bar {
+      background: white;
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+  }
+
+  .btn-action {
+      border-radius: 12px;
+      font-weight: 700;
+      padding: 10px 18px;
   }
 
   @media print {
       .navbar,
-      .print-hide {
+      .actions-bar,
+      footer {
           display: none !important;
       }
 
       body {
-          background: #fff !important;
+          background: white !important;
       }
 
       .card-soft,
-      .top-banner {
+      .detalle-header {
           box-shadow: none !important;
-      }
-
-      .top-banner {
-          background: #fff !important;
-          color: #000 !important;
-          border: 1px solid #ddd !important;
-      }
-
-      .info-chip {
-          color: #000 !important;
-          background: #fff !important;
-          border: 1px solid #ddd !important;
       }
   }
 </style>
 
-<div class="container py-4">
+<div class="detalle-header">
+    <h1>Historia Clínica / Detalle de Atención</h1>
+    <p class="mb-2">Registro clínico completo del paciente</p>
 
-  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-    <div>
-      <h2 class="mb-1">Detalle de Atención</h2>
-      <div class="text-muted">Registro clínico del paciente</div>
-    </div>
-
-    <div class="btn-group print-hide">
-      {% if atencion.cita_id %}
-      <a class="btn btn-outline-secondary" href="javascript:history.back()">↩ Volver</a>
-      {% else %}
-      <a class="btn btn-outline-secondary" href="{{ url_for('clientes.index') }}">↩ Volver</a>
-      {% endif %}
-      <button class="btn btn-outline-primary" onclick="window.print()">🖨️ Imprimir</button>
-    </div>
-  </div>
-
-  <div class="top-banner mb-3">
-    <div class="row align-items-center g-3">
-      <div class="col-lg-8">
-        <h3 class="mb-2">{{ atencion.cliente_nombre or atencion.paciente or "Paciente sin nombre" }}</h3>
-        <div class="mb-1">
-          <span class="info-chip">Doctor: {{ atencion.doctor_nombre or "—" }}</span>
-          <span class="info-chip">Especialidad: {{ atencion.especialidad or "General" }}</span>
-        </div>
-      </div>
-
-      <div class="col-lg-4 text-lg-end">
-        <div class="small">Fecha de atención</div>
-        <div class="fs-5 fw-bold">
-          {{ atencion.fecha.strftime("%Y-%m-%d %H:%M") if atencion.fecha and atencion.fecha.strftime else atencion.fecha or "—" }}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card card-soft mb-3">
-    <div class="card-body">
-      <div class="section-title">Datos generales</div>
-      <div class="row g-3">
-        <div class="col-12 col-lg-8">
-          <div class="kv">
-            <div class="fw-semibold">Paciente:</div>
-            <div>{{ atencion.cliente_nombre or atencion.paciente or "—" }}</div>
-
-            <div class="fw-semibold">Doctor:</div>
-            <div>{{ atencion.doctor_nombre or "—" }}</div>
-
-            <div class="fw-semibold">Especialidad:</div>
-            <div><span class="pill">{{ atencion.especialidad or "General" }}</span></div>
-
-            <div class="fw-semibold">Fecha:</div>
-            <div>{{ atencion.fecha.strftime("%Y-%m-%d %H:%M") if atencion.fecha and atencion.fecha.strftime else atencion.fecha or "—" }}</div>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-4">
-          <div class="subtle-box">
-            <div class="small text-muted">Próxima cita</div>
-            <div class="fs-5 fw-bold">
-              {{ atencion.proxima_fecha.strftime("%Y-%m-%d") if atencion.proxima_fecha and atencion.proxima_fecha.strftime else atencion.proxima_fecha or "—" }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-3">
-    <div class="col-12 col-lg-6">
-      <div class="card card-soft h-100">
-        <div class="card-body">
-          <div class="section-title">Diagnóstico</div>
-          <div class="mono">{{ atencion.diagnostico or "—" }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="card card-soft h-100">
-        <div class="card-body">
-          <div class="section-title">Tratamiento</div>
-          <div class="mono">{{ atencion.tratamiento or "—" }}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {% if atencion.sintomas %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Síntomas</div>
-      <div class="mono">{{ atencion.sintomas }}</div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if atencion.indicaciones or atencion.observaciones %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Indicaciones y observaciones</div>
-
-      {% if atencion.indicaciones %}
-      <div class="mb-3">
-        <div class="small text-muted mb-1">Indicaciones</div>
-        <div class="mono">{{ atencion.indicaciones }}</div>
-      </div>
-      {% endif %}
-
-      {% if atencion.observaciones %}
-      <div>
-        <div class="small text-muted mb-1">Observaciones</div>
-        <div class="mono">{{ atencion.observaciones }}</div>
-      </div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  {% if atencion.presion_arterial or atencion.presion_arterial_clinica or atencion.peso or atencion.altura or atencion.imc or atencion.glucemia or atencion.insulina_utilizada %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Signos y métricas</div>
-      <div class="row g-3">
-        {% if atencion.presion_arterial %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">Presión arterial</div>
-            <div class="metric-value">{{ atencion.presion_arterial }}</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.presion_arterial_clinica %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">TA clínica</div>
-            <div class="metric-value">{{ atencion.presion_arterial_clinica }}</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.peso %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">Peso</div>
-            <div class="metric-value">{{ atencion.peso }} kg</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.altura %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">Altura</div>
-            <div class="metric-value">{{ atencion.altura }}</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.imc %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">IMC</div>
-            <div class="metric-value">{{ atencion.imc }}</div>
-            <div class="small text-muted">{{ atencion.imc_cat or "—" }}</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.glucemia %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">Glucemia</div>
-            <div class="metric-value">{{ atencion.glucemia }}</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.insulina_utilizada %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">Insulina utilizada</div>
-            <div class="metric-value fs-6">{{ atencion.insulina_utilizada }}</div>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if atencion.tipo_diabetes or atencion.hba1c or atencion.notas_clinica %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Diabetes / Metabólico</div>
-
-      <div class="row g-3">
-        {% if atencion.tipo_diabetes %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">Tipo</div>
-            <div class="metric-value fs-6">{{ atencion.tipo_diabetes }}</div>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if atencion.hba1c %}
-        <div class="col-6 col-md-3">
-          <div class="metric-box">
-            <div class="metric-label">HbA1c</div>
-            <div class="metric-value">{{ atencion.hba1c }}</div>
-            {% if atencion.hba1c_cat %}
-            <div class="small text-muted">{{ atencion.hba1c_cat }}</div>
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-      </div>
-
-      {% if atencion.notas_clinica %}
-      <hr>
-      <div class="small text-muted mb-1">Notas clínicas</div>
-      <div class="mono">{{ atencion.notas_clinica }}</div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
-  {% if atencion.estudios_pedidos %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Estudios pedidos</div>
-      <div class="mono">{{ atencion.estudios_pedidos }}</div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if atencion.recetas %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Recetas</div>
-      <div class="mono">{{ atencion.recetas }}</div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if notas_extra %}
-  <div class="card card-soft mt-3">
-    <div class="card-body">
-      <div class="section-title">Campos específicos ({{ atencion.especialidad or 'General' }})</div>
-
-      {% if notas_extra.__class__.__name__ == 'dict' %}
-      <div class="row g-3">
-        {% for k, v in notas_extra.items() %}
-        <div class="col-12 col-md-6">
-          <div class="border rounded-3 p-3 h-100 bg-light">
-            <div class="small text-muted mb-1">{{ k }}</div>
-            <div class="fw-semibold mono">{{ v or "—" }}</div>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="mono">{{ notas_extra }}</div>
-      {% endif %}
-    </div>
-  </div>
-  {% endif %}
-
+    <span class="info-chip">Paciente: {{ atencion.cliente_nombre or atencion.paciente or "—" }}</span>
+    <span class="info-chip">Doctor: {{ atencion.doctor_nombre or "—" }}</span>
+    <span class="info-chip">Especialidad: {{ atencion.especialidad or "General" }}</span>
 </div>
+
+<div class="actions-bar">
+    <a class="btn btn-outline-secondary btn-action" href="javascript:history.back()">
+        ↩ Volver
+    </a>
+
+    <a href="{{ url_for('atenciones.generar_pdf_atencion', atencion_id=atencion.id) }}"
+   class="btn btn-success btn-action">
+    📄 Descargar PDF
+    </a>
+    <button class="btn btn-primary btn-action" onclick="window.print()">
+        🖨️ Imprimir
+    </button>
+</div>
+
+<div class="card card-soft mb-4">
+    <div class="card-body">
+        <div class="section-title">Datos generales</div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="subtle-box">
+                    <div class="label-soft">Paciente</div>
+                    <div class="value-soft">{{ atencion.cliente_nombre or atencion.paciente or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="subtle-box">
+                    <div class="label-soft">Doctor</div>
+                    <div class="value-soft">{{ atencion.doctor_nombre or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="subtle-box">
+                    <div class="label-soft">Especialidad</div>
+                    <div class="value-soft">{{ atencion.especialidad or "General" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="subtle-box">
+                    <div class="label-soft">Fecha</div>
+                    <div class="value-soft">
+                        {{ atencion.fecha.strftime("%Y-%m-%d %H:%M") if atencion.fecha and atencion.fecha.strftime else atencion.fecha or "—" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card card-soft h-100">
+            <div class="card-body">
+                <div class="section-title">Diagnóstico</div>
+                <div class="mono">{{ atencion.diagnostico or "—" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-soft h-100">
+            <div class="card-body">
+                <div class="section-title">Tratamiento</div>
+                <div class="mono">{{ atencion.tratamiento or "—" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-soft mt-4">
+    <div class="card-body">
+        <div class="section-title">Evolución clínica</div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="subtle-box">
+                    <div class="label-soft">Síntomas</div>
+                    <div class="mono">{{ atencion.sintomas or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="subtle-box">
+                    <div class="label-soft">Observaciones</div>
+                    <div class="mono">{{ atencion.observaciones or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="subtle-box">
+                    <div class="label-soft">Indicaciones</div>
+                    <div class="mono">{{ atencion.indicaciones or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="subtle-box">
+                    <div class="label-soft">Próxima cita</div>
+                    <div class="value-soft">
+                        {{ atencion.proxima_fecha.strftime("%Y-%m-%d") if atencion.proxima_fecha and atencion.proxima_fecha.strftime else atencion.proxima_fecha or "—" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card card-soft mt-4">
+    <div class="card-body">
+        <div class="section-title">Signos y métricas</div>
+
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">Presión arterial</div>
+                    <div class="metric-value">{{ atencion.presion_arterial or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">TA clínica</div>
+                    <div class="metric-value">{{ atencion.presion_arterial_clinica or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">Peso</div>
+                    <div class="metric-value">
+                        {{ atencion.peso ~ " kg" if atencion.peso else "—" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">Altura</div>
+                    <div class="metric-value">{{ atencion.altura or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">IMC</div>
+                    <div class="metric-value">{{ atencion.imc or "—" }}</div>
+                    <div class="small text-muted">{{ atencion.imc_cat or "" }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">Glucemia</div>
+                    <div class="metric-value">{{ atencion.glucemia or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">HbA1c</div>
+                    <div class="metric-value">{{ atencion.hba1c or "—" }}</div>
+                    <div class="small text-muted">{{ atencion.hba1c_cat or "" }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+                <div class="metric-box">
+                    <div class="metric-label">Insulina</div>
+                    <div class="metric-value fs-6">{{ atencion.insulina_utilizada or "—" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-6">
+        <div class="card card-soft h-100">
+            <div class="card-body">
+                <div class="section-title">Recetas</div>
+                <div class="mono">{{ atencion.recetas or "—" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card card-soft h-100">
+            <div class="card-body">
+                <div class="section-title">Estudios pedidos</div>
+                <div class="mono">{{ atencion.estudios_pedidos or "—" }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if atencion.tipo_diabetes or atencion.notas_clinica %}
+<div class="card card-soft mt-4">
+    <div class="card-body">
+        <div class="section-title">Datos metabólicos / endocrinológicos</div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="metric-box">
+                    <div class="metric-label">Tipo de diabetes</div>
+                    <div class="metric-value fs-6">{{ atencion.tipo_diabetes or "—" }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="subtle-box">
+                    <div class="label-soft">Notas clínicas</div>
+                    <div class="mono">{{ atencion.notas_clinica or "—" }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if notas_extra %}
+<div class="card card-soft mt-4">
+    <div class="card-body">
+        <div class="section-title">Campos específicos de especialidad</div>
+
+        {% if notas_extra.__class__.__name__ == 'dict' %}
+        <div class="row g-3">
+            {% for k, v in notas_extra.items() %}
+            <div class="col-md-6">
+                <div class="subtle-box">
+                    <div class="label-soft">{{ k }}</div>
+                    <div class="mono">{{ v or "—" }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="mono">{{ notas_extra }}</div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

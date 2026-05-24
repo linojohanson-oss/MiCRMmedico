@@ -1,197 +1,316 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Registrar Atención Médica</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .section-title {
-            font-weight: bold;
-            margin-top: 1rem;
-            color: #0d6efd;
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 5px;
-        }
-        .form-section {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 6px rgba(0,0,0,.08);
-        }
-        .form-label { font-weight: 600; }
-        .form-control { border-radius: 8px; }
-        textarea.form-control { height: 80px; }
-    </style>
-</head>
-<body class="bg-light">
-<div class="container mt-4">
-    <h2 class="mb-4 text-primary">Registrar Atención Médica</h2>
+{% extends "base.html" %}
 
-    <form method="POST">
-        <div class="form-section">
-            <h5 class="section-title">Información de la Cita</h5>
-            <p><strong>Fecha:</strong> {{ cita.fecha }}</p>
-            <p><strong>Paciente:</strong> {{ cita.nombre_cliente }}</p>
-            <p><strong>Doctor:</strong> {{ cita.nombre_doctor }}</p>
-            <p><strong>Especialidad:</strong> {{ cita.especialidad }}</p>
+{% block title %}Registrar Atención | CRM Médico{% endblock %}
+
+{% block content %}
+
+<style>
+    .atencion-header {
+        background: linear-gradient(135deg, #3498db, #2c3e50);
+        color: white;
+        border-radius: 22px;
+        padding: 32px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    }
+
+    .atencion-header h1 {
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .info-card, .form-section {
+        background: white;
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        border-left: 6px solid #3498db;
+    }
+
+    .section-title {
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    .info-item {
+        background: #f4f7fb;
+        border-radius: 14px;
+        padding: 15px;
+        height: 100%;
+    }
+
+    .info-label {
+        color: #6c757d;
+        font-size: .85rem;
+        font-weight: 600;
+    }
+
+    .info-value {
+        color: #2c3e50;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 11px 13px;
+    }
+
+    textarea.form-control {
+        min-height: 90px;
+    }
+
+    .actions-bar {
+        background: white;
+        border-radius: 18px;
+        padding: 20px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.08);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        border-radius: 12px;
+        padding: 11px 20px;
+        font-weight: 700;
+    }
+</style>
+
+<div class="atencion-header">
+    <h1>Registrar Atención Médica</h1>
+    <p class="mb-0">Carga clínica completa asociada a la cita seleccionada.</p>
+</div>
+
+<form method="POST">
+
+    <div class="info-card">
+        <h3 class="section-title">Información de la cita</h3>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <div class="info-item">
+                    <div class="info-label">Fecha</div>
+                    <div class="info-value">{{ cita.fecha }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="info-item">
+                    <div class="info-label">Paciente</div>
+                    <div class="info-value">{{ cita.nombre_cliente }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="info-item">
+                    <div class="info-label">Doctor</div>
+                    <div class="info-value">{{ cita.nombre_doctor }}</div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="info-item">
+                    <div class="info-label">Especialidad</div>
+                    <div class="info-value">{{ cita.especialidad }}</div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div class="form-section">
-            <h5 class="section-title">Datos Generales</h5>
+    <div class="form-section">
+        <h3 class="section-title">Datos generales</h3>
 
-            <div class="mb-3">
+        <div class="row g-3">
+            <div class="col-md-6">
                 <label class="form-label">Diagnóstico</label>
                 <textarea name="diagnostico" class="form-control" placeholder="Escribir diagnóstico..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Tratamiento</label>
                 <textarea name="tratamiento" class="form-control" placeholder="Escribir tratamiento..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Observaciones</label>
                 <textarea name="observaciones" class="form-control" placeholder="Agregar observaciones..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Recetas</label>
                 <textarea name="recetas" class="form-control" placeholder="Medicamentos o recomendaciones..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Síntomas</label>
                 <textarea name="sintomas" class="form-control" placeholder="Síntomas referidos por el paciente..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Indicaciones</label>
                 <textarea name="indicaciones" class="form-control" placeholder="Indicaciones al alta / cuidados..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Estudios pedidos</label>
                 <textarea name="estudios_pedidos" class="form-control" placeholder="Laboratorio, imágenes, otros..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Notas extra</label>
                 <textarea name="notas_extra" class="form-control" placeholder="Otros datos importantes..."></textarea>
             </div>
 
-            <div class="mb-3">
+            <div class="col-md-6">
                 <label class="form-label">Notas clínica</label>
                 <textarea name="notas_clinica" class="form-control" placeholder="Notas clínicas adicionales..."></textarea>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Próxima Fecha</label>
+            <div class="col-md-6">
+                <label class="form-label">Próxima fecha</label>
                 <input type="date" name="proxima_fecha" class="form-control">
             </div>
         </div>
+    </div>
 
-        <div class="form-section">
-            <h5 class="section-title">Signos y métricas</h5>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Tensión Arterial (TA)</label>
-                    <input type="text" name="ta" class="form-control" placeholder="Ej: 120/80">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Presión arterial (clínica)</label>
-                    <input type="text" name="presion_arterial_clinica" class="form-control" placeholder="Otra medición si aplica">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Peso (kg)</label>
-                    <input type="number" step="0.01" name="peso" class="form-control" placeholder="Ej: 72.50">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Altura (m o cm)</label>
-                    <input type="number" step="0.01" name="altura" class="form-control" placeholder="Ej: 1.73 o 173">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label class="form-label">Insulina utilizada</label>
-                    <input type="text" name="insulina_utilizada" class="form-control" placeholder="Si aplica">
-                </div>
-            </div>
-        </div>
+    <div class="form-section">
+        <h3 class="section-title">Signos y métricas</h3>
 
-        {% if cita.especialidad == 'Oftalmología' %}
-        <div class="form-section">
-            <h5 class="section-title">Parámetros Oftalmológicos</h5>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Agudeza Visual</label>
-                    <input type="text" name="agudeza_visual" class="form-control" placeholder="Ej: 20/20">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Presión Intraocular</label>
-                    <input type="text" name="pio" class="form-control" placeholder="Ej: 16 mmHg">
-                </div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Tensión Arterial</label>
+                <input type="text" name="ta" class="form-control" placeholder="Ej: 120/80">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Presión arterial clínica</label>
+                <input type="text" name="presion_arterial_clinica" class="form-control" placeholder="Otra medición">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Peso kg</label>
+                <input type="number" step="0.01" name="peso" class="form-control" placeholder="Ej: 72.50">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Altura</label>
+                <input type="number" step="0.01" name="altura" class="form-control" placeholder="Ej: 1.73 o 173">
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Insulina utilizada</label>
+                <input type="text" name="insulina_utilizada" class="form-control" placeholder="Si aplica">
             </div>
         </div>
-        {% elif cita.especialidad == 'Cardiología' %}
-        <div class="form-section">
-            <h5 class="section-title">Parámetros Cardíacos</h5>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Frecuencia Cardíaca</label>
-                    <input type="text" name="fc" class="form-control" placeholder="Ej: 72 lpm">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Tensión Arterial</label>
-                    <input type="text" name="ta" class="form-control" placeholder="Ej: 120/80">
-                </div>
+    </div>
+
+    {% if cita.especialidad == 'Oftalmología' %}
+    <div class="form-section">
+        <h3 class="section-title">Parámetros oftalmológicos</h3>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Agudeza visual</label>
+                <input type="text" name="agudeza_visual" class="form-control" placeholder="Ej: 20/20">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Presión intraocular</label>
+                <input type="text" name="pio" class="form-control" placeholder="Ej: 16 mmHg">
             </div>
         </div>
-        {% elif cita.especialidad == 'Neurología' %}
-        <div class="form-section">
-            <h5 class="section-title">Examen Neurológico</h5>
-            <div class="mb-3">
+    </div>
+    {% elif cita.especialidad == 'Cardiología' %}
+    <div class="form-section">
+        <h3 class="section-title">Parámetros cardíacos</h3>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Frecuencia cardíaca</label>
+                <input type="text" name="fc" class="form-control" placeholder="Ej: 72 lpm">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Tensión arterial</label>
+                <input type="text" name="ta" class="form-control" placeholder="Ej: 120/80">
+            </div>
+        </div>
+    </div>
+    {% elif cita.especialidad == 'Neurología' %}
+    <div class="form-section">
+        <h3 class="section-title">Examen neurológico</h3>
+
+        <div class="row g-3">
+            <div class="col-md-6">
                 <label class="form-label">Reflejos</label>
                 <input type="text" name="reflejos" class="form-control">
             </div>
-            <div class="mb-3">
+
+            <div class="col-md-6">
                 <label class="form-label">Coordinación</label>
                 <input type="text" name="coordinacion" class="form-control">
             </div>
         </div>
-        {% elif cita.especialidad == 'Endocrinología' %}
-        <div class="form-section">
-            <h5 class="section-title">Parámetros Endocrinológicos</h5>
-            <div class="mb-3">
+    </div>
+    {% elif cita.especialidad == 'Endocrinología' %}
+    <div class="form-section">
+        <h3 class="section-title">Parámetros endocrinológicos</h3>
+
+        <div class="row g-3">
+            <div class="col-md-4">
                 <label class="form-label">Glucemia</label>
                 <input type="text" name="glucemia" class="form-control" placeholder="Ej: 90 mg/dL">
             </div>
-            <div class="mb-3">
-                <label class="form-label">Hemoglobina Glicosilada (HbA1c)</label>
+
+            <div class="col-md-4">
+                <label class="form-label">HbA1c</label>
                 <input type="text" name="hba1c" class="form-control" placeholder="Ej: 6.2">
             </div>
-            <div class="mb-3">
+
+            <div class="col-md-4">
                 <label class="form-label">Tipo de Diabetes</label>
                 <input type="text" name="tipo_diabetes" class="form-control" placeholder="Ej: Tipo 2">
             </div>
         </div>
-        {% elif cita.especialidad == 'Clínica' %}
-        <div class="form-section">
-            <h5 class="section-title">Examen Clínico</h5>
-            <div class="mb-3">
-                <label class="form-label">Examen Físico</label>
+    </div>
+    {% elif cita.especialidad == 'Clínica' %}
+    <div class="form-section">
+        <h3 class="section-title">Examen clínico</h3>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Examen físico</label>
                 <input type="text" name="examen_fisico" class="form-control">
             </div>
-            <div class="mb-3">
-                <label class="form-label">Diagnóstico Diferencial</label>
+
+            <div class="col-md-6">
+                <label class="form-label">Diagnóstico diferencial</label>
                 <input type="text" name="diagnostico_diferencial" class="form-control">
             </div>
         </div>
-        {% endif %}
+    </div>
+    {% endif %}
 
-        <div class="mt-4 text-end">
-            <button type="submit" class="btn btn-success px-4">💾 Guardar</button>
-            <a href="{{ url_for('citas.ver_citas', cliente_id=cita.cliente_id) }}" class="btn btn-outline-secondary px-4">↩ Volver</a>
-        </div>
-    </form>
-</div>
-</body>
-</html>
+    <div class="actions-bar">
+        <a href="{{ url_for('citas.ver_citas', cliente_id=cita.cliente_id) }}"
+           class="btn btn-outline-secondary btn-action">
+            ↩ Volver
+        </a>
+
+        <button type="submit" class="btn btn-success btn-action">
+            💾 Guardar atención
+        </button>
+    </div>
+
+</form>
+
+{% endblock %}
