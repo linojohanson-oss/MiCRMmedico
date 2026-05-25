@@ -456,18 +456,26 @@ def enviar_email(destinatario, asunto, cuerpo):
     if not email_user or not email_pass:
         return False, "Faltan EMAIL_USER o EMAIL_PASS"
 
-    msg = EmailMessage()
-    msg["From"] = email_user
-    msg["To"] = destinatario
-    msg["Subject"] = asunto
-    msg.set_content(cuerpo)
+    try:
+        msg = EmailMessage()
+        msg["From"] = email_user
+        msg["To"] = destinatario
+        msg["Subject"] = asunto
+        msg.set_content(cuerpo)
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(email_user, email_pass)
-        smtp.send_message(msg)
+        with smtplib.SMTP_SSL(
+            "smtp.gmail.com",
+            465,
+            timeout=15
+        ) as smtp:
 
-    return True, "Email enviado correctamente"
+            smtp.login(email_user, email_pass)
+            smtp.send_message(msg)
 
+        return True, "Email enviado correctamente"
+
+    except Exception as e:
+        return False, f"Error enviando email: {str(e)}"
 
 @atenciones_bp.route('/atencion/<int:atencion_id>/enviar_receta')
 def enviar_receta_email(atencion_id):
