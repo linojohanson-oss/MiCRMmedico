@@ -349,3 +349,100 @@ def receta_pdf(atencion_id):
     response.headers.set('Content-Type', 'application/pdf')
 
     return response
+@atenciones_bp.route('/atencion/<int:atencion_id>/pdf')
+def atencion_pdf(atencion_id):
+
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.*,
+               cl.nombre,
+               d.nombre,
+               d.especialidad
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        JOIN doctores d ON c.doctor_id = d.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    atencion = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not atencion:
+        return "Atención no encontrada", 404
+
+    pdf = FPDF()
+    pdf.add_page()
+
+    # TITULO
+    pdf.set_font("Arial", 'B', 20)
+    pdf.cell(0, 12, "Informe de Atención Médica", ln=True, align='C')
+
+    pdf.ln(10)
+
+    # DATOS PACIENTE
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "Datos del Paciente", ln=True)
+
+    pdf.set_font("Arial", '', 12)
+
+    pdf.cell(0, 8, f"Paciente: {atencion[18]}", ln=True)
+    pdf.cell(0, 8, f"Doctor: {atencion[19]}", ln=True)
+    pdf.cell(0, 8, f"Especialidad: {atencion[20]}", ln=True)
+
+    pdf.ln(8)
+
+    # DATOS CLINICOS
+    campos = [
+        ("Diagnóstico", atencion[3]),
+        ("Tratamiento", atencion[4]),
+        ("Observaciones", atencion[2]),
+        ("Recetas", atencion[5]),
+        ("Indicaciones", atencion[6]),
+        ("Estudios pedidos", atencion[7]),
+        ("Síntomas", atencion[8]),
+        ("Peso", atencion[10]),
+        ("Altura", atencion[11]),
+        ("Glucemia", atencion[12]),
+        ("Insulina utilizada", atencion[13]),
+        ("Tipo diabetes", atencion[15]),
+        ("HbA1c", atencion[16]),
+    ]
+
+    for titulo, valor in campos:
+
+        pdf.set_font("Arial", 'B', 13)
+        pdf.cell(0, 8, titulo, ln=True)
+
+        pdf.set_font("Arial", '', 12)
+
+        texto = str(valor) if valor else "Sin información"
+
+        pdf.multi_cell(0, 8, texto)
+
+        pdf.ln(2)
+
+    pdf.ln(10)
+
+    pdf.cell(0, 10, "Firma médica: ____________________", ln=True)
+
+    response = make_response(
+        pdf.output(dest='S').encode('latin-1')
+    )
+
+    response.headers.set(
+        'Content-Disposition',
+        'attachment',
+        filename=f"atencion_{atencion_id}.pdf"
+    )
+
+    response.headers.set(
+        'Content-Type',
+        'application/pdf'
+    )
+
+    return response
