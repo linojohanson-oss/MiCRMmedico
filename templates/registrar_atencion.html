@@ -99,28 +99,28 @@
             <div class="col-md-3">
                 <div class="info-item">
                     <div class="info-label">Fecha</div>
-                    <div class="info-value">{{ cita.fecha }}</div>
+                    <div class="info-value">{{ cita[2] }}</div>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="info-item">
                     <div class="info-label">Paciente</div>
-                    <div class="info-value">{{ cita.nombre_cliente }}</div>
+                    <div class="info-value">{{ cita[3] }}</div>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="info-item">
                     <div class="info-label">Doctor</div>
-                    <div class="info-value">{{ cita.nombre_doctor }}</div>
+                    <div class="info-value">{{ cita[4] }}</div>
                 </div>
             </div>
 
             <div class="col-md-3">
                 <div class="info-item">
                     <div class="info-label">Especialidad</div>
-                    <div class="info-value">{{ cita.especialidad }}</div>
+                    <div class="info-value">{{ cita[5] }}</div>
                 </div>
             </div>
         </div>
@@ -166,11 +166,6 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label">Notas extra</label>
-                <textarea name="notas_extra" class="form-control" placeholder="Otros datos importantes..."></textarea>
-            </div>
-
-            <div class="col-md-6">
                 <label class="form-label">Notas clínica</label>
                 <textarea name="notas_clinica" class="form-control" placeholder="Notas clínicas adicionales..."></textarea>
             </div>
@@ -188,7 +183,7 @@
         <div class="row g-3">
             <div class="col-md-4">
                 <label class="form-label">Tensión Arterial</label>
-                <input type="text" name="ta" class="form-control" placeholder="Ej: 120/80">
+                <input type="text" name="presion_arterial" class="form-control" placeholder="Ej: 120/80">
             </div>
 
             <div class="col-md-4">
@@ -213,7 +208,7 @@
         </div>
     </div>
 
-    {% if cita.especialidad == 'Oftalmología' %}
+    {% if cita[5] == 'Oftalmología' %}
     <div class="form-section">
         <h3 class="section-title">Parámetros oftalmológicos</h3>
 
@@ -225,27 +220,29 @@
 
             <div class="col-md-6">
                 <label class="form-label">Presión intraocular</label>
-                <input type="text" name="pio" class="form-control" placeholder="Ej: 16 mmHg">
+                <input type="text" name="presion_intraocular" class="form-control" placeholder="Ej: 16 mmHg">
             </div>
         </div>
     </div>
-    {% elif cita.especialidad == 'Cardiología' %}
+
+    {% elif cita[5] == 'Cardiología' %}
     <div class="form-section">
         <h3 class="section-title">Parámetros cardíacos</h3>
 
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Frecuencia cardíaca</label>
-                <input type="text" name="fc" class="form-control" placeholder="Ej: 72 lpm">
+                <input type="text" name="frecuencia_cardiaca" class="form-control" placeholder="Ej: 72 lpm">
             </div>
 
             <div class="col-md-6">
                 <label class="form-label">Tensión arterial</label>
-                <input type="text" name="ta" class="form-control" placeholder="Ej: 120/80">
+                <input type="text" name="presion_arterial" class="form-control" placeholder="Ej: 120/80">
             </div>
         </div>
     </div>
-    {% elif cita.especialidad == 'Neurología' %}
+
+    {% elif cita[5] == 'Neurología' %}
     <div class="form-section">
         <h3 class="section-title">Examen neurológico</h3>
 
@@ -261,7 +258,8 @@
             </div>
         </div>
     </div>
-    {% elif cita.especialidad == 'Endocrinología' %}
+
+    {% elif cita[5] == 'Endocrinología' %}
     <div class="form-section">
         <h3 class="section-title">Parámetros endocrinológicos</h3>
 
@@ -282,7 +280,8 @@
             </div>
         </div>
     </div>
-    {% elif cita.especialidad == 'Clínica' %}
+
+    {% elif cita[5] == 'Clínica' %}
     <div class="form-section">
         <h3 class="section-title">Examen clínico</h3>
 
@@ -301,7 +300,7 @@
     {% endif %}
 
     <div class="actions-bar">
-        <a href="{{ url_for('citas.ver_citas', cliente_id=cita.cliente_id) }}"
+        <a href="{{ url_for('citas.ver_citas', cliente_id=cita[1]) }}"
            class="btn btn-outline-secondary btn-action">
             ↩ Volver
         </a>

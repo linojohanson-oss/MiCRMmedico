@@ -13,6 +13,7 @@ def registrar_atencion(cita_id):
 
     cursor.execute("""
         SELECT c.id,
+               c.cliente_id,
                c.fecha,
                cl.nombre,
                d.nombre,
@@ -51,7 +52,7 @@ def registrar_atencion(cita_id):
         tipo_diabetes = request.form.get('tipo_diabetes')
         hba1c = request.form.get('hba1c')
 
-        especialidad = cita[4]
+        especialidad = cita[5]
 
         notas_extra = {}
 
@@ -128,7 +129,7 @@ def registrar_atencion(cita_id):
         conn.close()
 
         flash("Atención registrada correctamente", "success")
-        return redirect(url_for('clientes.index'))
+        return redirect(url_for('citas.ver_citas', cliente_id=cita[1]))
 
     cursor.close()
     conn.close()
