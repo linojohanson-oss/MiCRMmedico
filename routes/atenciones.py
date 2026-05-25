@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from db import mysql
+from db import obtener_conexion
 from datetime import datetime
 import json
 
@@ -11,12 +11,15 @@ atenciones_bp = Blueprint('atenciones', __name__)
 # =========================
 @atenciones_bp.route('/atencion/<int:cita_id>', methods=['GET', 'POST'])
 def registrar_atencion(cita_id):
-    conn = mysql.connect()
+
+    conn = obtener_conexion()
     cursor = conn.cursor()
 
     # Obtener datos de la cita
     cursor.execute("""
-        SELECT c.id, c.fecha, c.hora,
+        SELECT c.id,
+               c.fecha,
+               c.hora,
                cl.nombre,
                d.nombre,
                d.especialidad
@@ -142,9 +145,15 @@ def registrar_atencion(cita_id):
 
         conn.commit()
 
+        cursor.close()
+        conn.close()
+
         flash("Atención registrada correctamente", "success")
 
-        return redirect(url_for('citas.ver_citas', cliente_id=cita[0]))
+        return redirect(url_for('clientes.index'))
+
+    cursor.close()
+    conn.close()
 
     return render_template('registrar_atencion.html', cita=cita)
 
@@ -155,7 +164,7 @@ def registrar_atencion(cita_id):
 @atenciones_bp.route('/atencion/<int:atencion_id>/ver')
 def ver_atencion(atencion_id):
 
-    conn = mysql.connect()
+    conn = obtener_conexion()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -171,6 +180,9 @@ def ver_atencion(atencion_id):
     """, (atencion_id,))
 
     atencion = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
 
     if not atencion:
         flash("Atención no encontrada", "danger")
@@ -188,7 +200,7 @@ def ver_atencion(atencion_id):
 @atenciones_bp.route('/atencion/<int:atencion_id>/detalle')
 def detalle_atencion_json(atencion_id):
 
-    conn = mysql.connect()
+    conn = obtener_conexion()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -205,10 +217,13 @@ def detalle_atencion_json(atencion_id):
 
     row = cursor.fetchone()
 
+    columnas = [col[0] for col in cursor.description]
+
+    cursor.close()
+    conn.close()
+
     if not row:
         return jsonify({"error": "No encontrada"}), 404
-
-    columnas = [col[0] for col in cursor.description]
 
     data = {}
 
