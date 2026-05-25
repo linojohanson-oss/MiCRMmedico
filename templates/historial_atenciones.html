@@ -181,27 +181,20 @@
         font-size: 1.1rem;
         color: #111827;
     }
-
-    @media (max-width: 768px) {
-        .hero-historial h1 {
-            font-size: 2.5rem;
-        }
-
-        .timeline-item {
-            padding-left: 60px;
-        }
-    }
 </style>
 
 <div class="container-fluid py-4">
 
     <div class="hero-historial">
+
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
 
             <div>
                 <h1>Historial Clínico</h1>
 
-                <p>Seguimiento médico integral del paciente.</p>
+                <p>
+                    Seguimiento médico integral del paciente.
+                </p>
 
                 <div class="patient-badge">
                     👤 {{ cliente[1] }}
@@ -228,7 +221,10 @@
 
         <div class="stat-card">
             <div class="stat-title">Total atenciones</div>
-            <div class="stat-value">{{ atenciones|length }}</div>
+
+            <div class="stat-value">
+                {{ atenciones|length }}
+            </div>
         </div>
 
         <div class="stat-card">
@@ -245,7 +241,10 @@
 
         <div class="stat-card">
             <div class="stat-title">Estado clínico</div>
-            <div class="stat-value">Seguimiento activo</div>
+
+            <div class="stat-value">
+                Seguimiento activo
+            </div>
         </div>
 
     </div>
@@ -265,24 +264,28 @@
                     <div class="timeline-header">
 
                         <div>
+
                             <div class="timeline-date">
                                 📅 {{ atencion[1] }}
                             </div>
 
                             <div class="doctor-name">
-                                🩺 {{ atencion[5] or 'Sin doctor' }}
+                                🩺 {{ atencion[5] }}
                             </div>
 
                             <div class="text-muted">
-                                {{ atencion[6] or 'Sin especialidad' }}
+                                {{ atencion[6] }}
                             </div>
+
                         </div>
 
                         <div>
+
                             <button class="btn btn-info btn-modern text-white"
                                     onclick="verDetalle({{ atencion[0] }})">
                                 Ver detalle
                             </button>
+
                         </div>
 
                     </div>
@@ -292,21 +295,30 @@
                         <div class="col-md-6">
                             <div class="timeline-section">
                                 <h6>Diagnóstico</h6>
-                                <p>{{ atencion[2] or 'Sin información' }}</p>
+
+                                <p>
+                                    {{ atencion[2] or 'Sin información' }}
+                                </p>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="timeline-section">
                                 <h6>Tratamiento</h6>
-                                <p>{{ atencion[3] or 'Sin información' }}</p>
+
+                                <p>
+                                    {{ atencion[3] or 'Sin información' }}
+                                </p>
                             </div>
                         </div>
 
                         <div class="col-md-12">
                             <div class="timeline-section">
                                 <h6>Observaciones</h6>
-                                <p>{{ atencion[4] or 'Sin información' }}</p>
+
+                                <p>
+                                    {{ atencion[4] or 'Sin información' }}
+                                </p>
                             </div>
                         </div>
 
@@ -330,34 +342,51 @@
 
 </div>
 
-<div class="modal fade" id="detalleModal" tabindex="-1">
+<div class="modal fade"
+     id="detalleModal"
+     tabindex="-1">
+
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Detalle de Atención</h5>
+
+                <h5 class="modal-title">
+                    Detalle de Atención
+                </h5>
 
                 <button type="button"
                         class="btn-close btn-close-white"
                         data-bs-dismiss="modal">
                 </button>
+
             </div>
 
-            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-body"
+                 id="modalBody">
+
+            </div>
 
         </div>
+
     </div>
+
 </div>
 
 <script>
 async function verDetalle(atencionId) {
+
     const response = await fetch(`/atencion/${atencionId}/detalle`);
+
     const data = await response.json();
 
     const modalBody = document.getElementById("modalBody");
 
     modalBody.innerHTML = `
+
         <div class="mb-4 text-end">
+
             <a href="/atencion/${atencionId}/pdf"
                class="btn btn-success btn-lg"
                target="_blank">
@@ -369,6 +398,19 @@ async function verDetalle(atencionId) {
                target="_blank">
                 🧾 Descargar Receta
             </a>
+
+            <a href="/atencion/${atencionId}/enviar_pdf"
+               class="btn btn-primary btn-lg"
+               target="_blank">
+                📧 Enviar Informe
+            </a>
+
+            <a href="/atencion/${atencionId}/enviar_receta"
+               class="btn btn-info btn-lg text-white"
+               target="_blank">
+                📧 Enviar Receta
+            </a>
+
         </div>
 
         <div class="row g-4">
