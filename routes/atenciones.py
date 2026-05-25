@@ -1,11 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from db import obtener_conexion
 from datetime import datetime
+from fpdf import FPDF
 import json
 import os
-import smtplib
 import resend
-from email.message import EmailMessage
 
 atenciones_bp = Blueprint('atenciones', __name__)
 
@@ -46,9 +45,7 @@ def registrar_atencion(cita_id):
         sintomas = request.form.get('sintomas')
         proxima_fecha = request.form.get('proxima_fecha')
 
-        presion_arterial_clinica = request.form.get('presion_arterial_clinica')
         notas_clinica = request.form.get('notas_clinica')
-
         peso = request.form.get('peso')
         altura = request.form.get('altura')
         glucemia = request.form.get('glucemia')
@@ -57,7 +54,6 @@ def registrar_atencion(cita_id):
         hba1c = request.form.get('hba1c')
 
         especialidad = cita[5]
-
         notas_extra = {}
 
         if especialidad == 'Cardiología':
@@ -220,7 +216,6 @@ def detalle_atencion_json(atencion_id):
         if peso > 0 and altura > 0:
             altura_m = altura / 100
             imc = round(peso / (altura_m ** 2), 2)
-
             data['imc'] = imc
 
             if imc < 18.5:
@@ -247,6 +242,8 @@ def detalle_atencion_json(atencion_id):
         pass
 
     return jsonify(data)
+
+
 @atenciones_bp.route('/historial_atenciones/<int:cliente_id>')
 def historial_atenciones(cliente_id):
     conn = obtener_conexion()
@@ -257,6 +254,7 @@ def historial_atenciones(cliente_id):
         FROM clientes
         WHERE id = %s
     """, (cliente_id,))
+
     cliente = cursor.fetchone()
 
     cursor.execute("""
@@ -273,6 +271,7 @@ def historial_atenciones(cliente_id):
         WHERE c.cliente_id = %s
         ORDER BY a.fecha DESC
     """, (cliente_id,))
+
     atenciones = cursor.fetchall()
 
     cursor.close()
@@ -283,13 +282,10 @@ def historial_atenciones(cliente_id):
         cliente=cliente,
         atenciones=atenciones
     )
-from flask import make_response
-from fpdf import FPDF
 
 
 @atenciones_bp.route('/atencion/<int:atencion_id>/receta_pdf')
 def receta_pdf(atencion_id):
-
     conn = obtener_conexion()
     cursor = conn.cursor()
 
@@ -317,12 +313,11 @@ def receta_pdf(atencion_id):
     pdf.add_page()
 
     pdf.set_font("Arial", 'B', 18)
-    pdf.cell(0, 10, "Receta Médica", ln=True, align='C')
+    pdf.cell(0, 10, "Receta Medica", ln=True, align='C')
 
     pdf.ln(10)
 
     pdf.set_font("Arial", '', 12)
-
     pdf.cell(0, 10, f"Paciente: {atencion[18]}", ln=True)
     pdf.cell(0, 10, f"Doctor: {atencion[19]}", ln=True)
     pdf.cell(0, 10, f"Especialidad: {atencion[20]}", ln=True)
@@ -330,17 +325,15 @@ def receta_pdf(atencion_id):
     pdf.ln(10)
 
     pdf.set_font("Arial", 'B', 14)
-    pdf.cell(0, 10, "Recetas / Medicación:", ln=True)
+    pdf.cell(0, 10, "Recetas / Medicacion:", ln=True)
 
     pdf.set_font("Arial", '', 12)
 
     receta = atencion[6] if atencion[6] else "Sin recetas registradas"
-
-    pdf.multi_cell(0, 10, receta)
+    pdf.multi_cell(0, 10, str(receta))
 
     pdf.ln(15)
-
-    pdf.cell(0, 10, "Firma médica: ____________________", ln=True)
+    pdf.cell(0, 10, "Firma medica: ____________________", ln=True)
 
     response = make_response(pdf.output(dest='S').encode('latin-1'))
 
@@ -353,9 +346,10 @@ def receta_pdf(atencion_id):
     response.headers.set('Content-Type', 'application/pdf')
 
     return response
+
+
 @atenciones_bp.route('/atencion/<int:atencion_id>/pdf')
 def atencion_pdf(atencion_id):
-
     conn = obtener_conexion()
     cursor = conn.cursor()
 
@@ -382,33 +376,29 @@ def atencion_pdf(atencion_id):
     pdf = FPDF()
     pdf.add_page()
 
-    # TITULO
     pdf.set_font("Arial", 'B', 20)
-    pdf.cell(0, 12, "Informe de Atención Médica", ln=True, align='C')
+    pdf.cell(0, 12, "Informe de Atencion Medica", ln=True, align='C')
 
     pdf.ln(10)
 
-    # DATOS PACIENTE
     pdf.set_font("Arial", 'B', 14)
     pdf.cell(0, 10, "Datos del Paciente", ln=True)
 
     pdf.set_font("Arial", '', 12)
-
     pdf.cell(0, 8, f"Paciente: {atencion[18]}", ln=True)
     pdf.cell(0, 8, f"Doctor: {atencion[19]}", ln=True)
     pdf.cell(0, 8, f"Especialidad: {atencion[20]}", ln=True)
 
     pdf.ln(8)
 
-    # DATOS CLINICOS
     campos = [
-        ("Diagnóstico", atencion[3]),
+        ("Diagnostico", atencion[3]),
         ("Tratamiento", atencion[4]),
         ("Observaciones", atencion[2]),
         ("Recetas", atencion[5]),
         ("Indicaciones", atencion[6]),
         ("Estudios pedidos", atencion[7]),
-        ("Síntomas", atencion[8]),
+        ("Sintomas", atencion[8]),
         ("Peso", atencion[10]),
         ("Altura", atencion[11]),
         ("Glucemia", atencion[12]),
@@ -418,25 +408,19 @@ def atencion_pdf(atencion_id):
     ]
 
     for titulo, valor in campos:
-
         pdf.set_font("Arial", 'B', 13)
         pdf.cell(0, 8, titulo, ln=True)
 
         pdf.set_font("Arial", '', 12)
-
-        texto = str(valor) if valor else "Sin información"
-
+        texto = str(valor) if valor else "Sin informacion"
         pdf.multi_cell(0, 8, texto)
 
         pdf.ln(2)
 
     pdf.ln(10)
+    pdf.cell(0, 10, "Firma medica: ____________________", ln=True)
 
-    pdf.cell(0, 10, "Firma médica: ____________________", ln=True)
-
-    response = make_response(
-        pdf.output(dest='S').encode('latin-1')
-    )
+    response = make_response(pdf.output(dest='S').encode('latin-1'))
 
     response.headers.set(
         'Content-Disposition',
@@ -444,26 +428,19 @@ def atencion_pdf(atencion_id):
         filename=f"atencion_{atencion_id}.pdf"
     )
 
-    response.headers.set(
-        'Content-Type',
-        'application/pdf'
-    )
+    response.headers.set('Content-Type', 'application/pdf')
 
     return response
+
+
 def enviar_email(destinatario, asunto, cuerpo):
-
     resend_api_key = os.getenv("RESEND_API_KEY")
-
-    email_from = os.getenv(
-        "EMAIL_FROM",
-        "CRM Médico <onboarding@resend.dev>"
-    )
+    email_from = os.getenv("EMAIL_FROM", "CRM Médico <onboarding@resend.dev>")
 
     if not resend_api_key:
         return False, "Falta RESEND_API_KEY"
 
     try:
-
         resend.api_key = resend_api_key
 
         params = {
@@ -478,56 +455,7 @@ def enviar_email(destinatario, asunto, cuerpo):
         return True, "Email enviado correctamente"
 
     except Exception as e:
-
         return False, f"Error enviando email con Resend: {str(e)}"
-
-@atenciones_bp.route('/atencion/<int:atencion_id>/enviar_receta')
-def enviar_receta_email(atencion_id):
-    conn = obtener_conexion()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT a.id, cl.nombre, cl.correo
-        FROM atenciones a
-        JOIN citas c ON a.cita_id = c.id
-        JOIN clientes cl ON c.cliente_id = cl.id
-        WHERE a.id = %s
-    """, (atencion_id,))
-
-    data = cursor.fetchone()
-
-    cursor.close()
-    conn.close()
-
-    if not data:
-        return "Atención no encontrada", 404
-
-    if not data[2]:
-        return "El paciente no tiene correo cargado", 400
-
-    link_receta = url_for('atenciones.receta_pdf', atencion_id=atencion_id, _external=True)
-
-    cuerpo = f"""
-Hola {data[1]},
-
-Te enviamos el enlace para descargar tu receta médica:
-
-{link_receta}
-
-Saludos,
-CRM Médico
-"""
-
-    ok, mensaje = enviar_email(
-        data[2],
-        "Receta médica",
-        cuerpo
-    )
-
-    if not ok:
-        return mensaje, 500
-
-    return "Receta enviada correctamente por email"
 
 
 @atenciones_bp.route('/atencion/<int:atencion_id>/enviar_pdf')
@@ -536,7 +464,10 @@ def enviar_pdf_email(atencion_id):
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT a.id, cl.nombre, cl.correo
+        SELECT a.id,
+               cl.nombre,
+               cl.correo,
+               cl.id
         FROM atenciones a
         JOIN citas c ON a.cita_id = c.id
         JOIN clientes cl ON c.cliente_id = cl.id
@@ -549,12 +480,18 @@ def enviar_pdf_email(atencion_id):
     conn.close()
 
     if not data:
-        return "Atención no encontrada", 404
+        flash("Atención no encontrada", "danger")
+        return redirect(url_for('clientes.index'))
 
     if not data[2]:
-        return "El paciente no tiene correo cargado", 400
+        flash("El paciente no tiene correo cargado", "warning")
+        return redirect(url_for('atenciones.historial_atenciones', cliente_id=data[3]))
 
-    link_pdf = url_for('atenciones.atencion_pdf', atencion_id=atencion_id, _external=True)
+    link_pdf = url_for(
+        'atenciones.atencion_pdf',
+        atencion_id=atencion_id,
+        _external=True
+    )
 
     cuerpo = f"""
 Hola {data[1]},
@@ -573,7 +510,69 @@ CRM Médico
         cuerpo
     )
 
-    if not ok:
-        return mensaje, 500
+    if ok:
+        flash("Informe enviado correctamente por email", "success")
+    else:
+        flash(mensaje, "danger")
 
-    return "Informe enviado correctamente por email"
+    return redirect(url_for('atenciones.historial_atenciones', cliente_id=data[3]))
+
+
+@atenciones_bp.route('/atencion/<int:atencion_id>/enviar_receta')
+def enviar_receta_email(atencion_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.id,
+               cl.nombre,
+               cl.correo,
+               cl.id
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    data = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not data:
+        flash("Atención no encontrada", "danger")
+        return redirect(url_for('clientes.index'))
+
+    if not data[2]:
+        flash("El paciente no tiene correo cargado", "warning")
+        return redirect(url_for('atenciones.historial_atenciones', cliente_id=data[3]))
+
+    link_receta = url_for(
+        'atenciones.receta_pdf',
+        atencion_id=atencion_id,
+        _external=True
+    )
+
+    cuerpo = f"""
+Hola {data[1]},
+
+Te enviamos el enlace para descargar tu receta médica:
+
+{link_receta}
+
+Saludos,
+CRM Médico
+"""
+
+    ok, mensaje = enviar_email(
+        data[2],
+        "Receta médica",
+        cuerpo
+    )
+
+    if ok:
+        flash("Receta enviada correctamente por email", "success")
+    else:
+        flash(mensaje, "danger")
+
+    return redirect(url_for('atenciones.historial_atenciones', cliente_id=data[3]))
