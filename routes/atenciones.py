@@ -279,3 +279,73 @@ def historial_atenciones(cliente_id):
         cliente=cliente,
         atenciones=atenciones
     )
+from flask import make_response
+from fpdf import FPDF
+
+
+@atenciones_bp.route('/atencion/<int:atencion_id>/receta_pdf')
+def receta_pdf(atencion_id):
+
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.*,
+               cl.nombre,
+               d.nombre,
+               d.especialidad
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        JOIN doctores d ON c.doctor_id = d.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    atencion = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not atencion:
+        return "Atención no encontrada", 404
+
+    pdf = FPDF()
+    pdf.add_page()
+
+    pdf.set_font("Arial", 'B', 18)
+    pdf.cell(0, 10, "Receta Médica", ln=True, align='C')
+
+    pdf.ln(10)
+
+    pdf.set_font("Arial", '', 12)
+
+    pdf.cell(0, 10, f"Paciente: {atencion[18]}", ln=True)
+    pdf.cell(0, 10, f"Doctor: {atencion[19]}", ln=True)
+    pdf.cell(0, 10, f"Especialidad: {atencion[20]}", ln=True)
+
+    pdf.ln(10)
+
+    pdf.set_font("Arial", 'B', 14)
+    pdf.cell(0, 10, "Recetas / Medicación:", ln=True)
+
+    pdf.set_font("Arial", '', 12)
+
+    receta = atencion[6] if atencion[6] else "Sin recetas registradas"
+
+    pdf.multi_cell(0, 10, receta)
+
+    pdf.ln(15)
+
+    pdf.cell(0, 10, "Firma médica: ____________________", ln=True)
+
+    response = make_response(pdf.output(dest='S').encode('latin-1'))
+
+    response.headers.set(
+        'Content-Disposition',
+        'attachment',
+        filename=f"receta_{atencion_id}.pdf"
+    )
+
+    response.headers.set('Content-Type', 'application/pdf')
+
+    return response
