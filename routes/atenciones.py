@@ -1,296 +1,276 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, abort
-from db import obtener_conexion
-from datetime import datetime, date
-from decimal import Decimal
-import pymysql
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from db import mysql
+from datetime import datetime
 import json
 
 atenciones_bp = Blueprint('atenciones', __name__)
 
 
+# =========================
+# REGISTRAR ATENCIÓN
+# =========================
 @atenciones_bp.route('/atencion/<int:cita_id>', methods=['GET', 'POST'])
 def registrar_atencion(cita_id):
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
+    conn = mysql.connect()
+    cursor = conn.cursor()
 
-    conn = obtener_conexion()
-    with conn.cursor(pymysql.cursors.DictCursor) as cursor:
-        cursor.execute("""
-            SELECT c.id, c.fecha, c.descripcion,
-                   cl.nombre AS nombre_cliente, cl.id AS cliente_id,
-                   d.nombre AS nombre_doctor, d.especialidad
-            FROM citas c
-            LEFT JOIN clientes cl ON c.cliente_id = cl.id
-            LEFT JOIN doctores d ON c.doctor_id = d.id
-            WHERE c.id = %s
-        """, (cita_id,))
-        cita = cursor.fetchone()
-    conn.close()
+    # Obtener datos de la cita
+    cursor.execute("""
+        SELECT c.id, c.fecha, c.hora,
+               cl.nombre,
+               d.nombre,
+               d.especialidad
+        FROM citas c
+        JOIN clientes cl ON c.cliente_id = cl.id
+        JOIN doctores d ON c.doctor_id = d.id
+        WHERE c.id = %s
+    """, (cita_id,))
+
+    cita = cursor.fetchone()
 
     if not cita:
-        abort(404)
+        flash("Cita no encontrada", "danger")
+        return redirect(url_for('clientes.index'))
 
     if request.method == 'POST':
-        def val(name):
-            return (request.form.get(name) or '').strip()
 
-        fecha = val('fecha') or datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        observaciones = val('observaciones')
-        diagnostico = val('diagnostico')
-        tratamiento = val('tratamiento')
-        recetas = val('recetas')
-        indicaciones = val('indicaciones')
-        estudios_pedidos = val('estudios_pedidos')
-        sintomas = val('sintomas')
-        proxima_fecha = val('proxima_fecha') or None
+        # =========================
+        # CAMPOS GENERALES
+        # =========================
+        observaciones = request.form.get('observaciones')
+        diagnostico = request.form.get('diagnostico')
+        tratamiento = request.form.get('tratamiento')
+        recetas = request.form.get('recetas')
+        indicaciones = request.form.get('indicaciones')
+        estudios_pedidos = request.form.get('estudios_pedidos')
+        sintomas = request.form.get('sintomas')
+        proxima_fecha = request.form.get('proxima_fecha')
 
-        presion_arterial = val('ta') or val('presion_arterial') or None
+        # Clínica
+        presion_arterial_clinica = request.form.get('presion_arterial_clinica')
+        notas_clinica = request.form.get('notas_clinica')
 
-        peso = request.form.get('peso') or None
-        altura = request.form.get('altura') or None
-        glucemia = request.form.get('glucemia') or None
-        insulina_utilizada = val('insulina_utilizada') or None
+        # Endocrinología
+        peso = request.form.get('peso')
+        altura = request.form.get('altura')
+        glucemia = request.form.get('glucemia')
+        insulina_utilizada = request.form.get('insulina_utilizada')
+        tipo_diabetes = request.form.get('tipo_diabetes')
+        hba1c = request.form.get('hba1c')
 
-        tipo_diabetes = val('tipo_diabetes') or None
-        hba1c = val('hba1c') or None
-        notas_clinica = val('notas_clinica') or None
+        # =========================
+        # NOTAS EXTRA
+        # =========================
+        notas_extra = {}
 
-        esp = (cita.get('especialidad') or '').strip()
-        notas_libres = val('notas_extra')
-        extra = {}
+        especialidad = cita[5]
 
-        if esp == 'Oftalmología':
-            extra['Agudeza visual'] = val('agudeza_visual')
-            extra['PIO'] = val('pio')
-        elif esp == 'Cardiología':
-            extra['Frecuencia cardíaca'] = val('fc')
-            if presion_arterial:
-                extra['Tensión arterial'] = presion_arterial
-        elif esp == 'Neurología':
-            extra['Reflejos'] = val('reflejos')
-            extra['Coordinación'] = val('coordinacion')
-        elif esp == 'Clínica':
-            extra['Examen físico'] = val('examen_fisico')
-            extra['Diagnóstico diferencial'] = val('diagnostico_diferencial')
-        elif esp == 'Endocrinología':
-            if glucemia:
-                extra['Glucemia'] = glucemia
-            if insulina_utilizada:
-                extra['Insulina utilizada'] = insulina_utilizada
-            if peso:
-                extra['Peso'] = peso
-            if altura:
-                extra['Altura'] = altura
-            if tipo_diabetes:
-                extra['Tipo de diabetes'] = tipo_diabetes
-            if hba1c:
-                extra['HbA1c'] = hba1c
+        # Cardiología
+        if especialidad == 'Cardiología':
+            notas_extra['frecuencia_cardiaca'] = request.form.get('frecuencia_cardiaca')
+            notas_extra['presion_arterial'] = request.form.get('presion_arterial')
 
-        if extra or notas_libres:
-            payload = {}
-            if notas_libres:
-                payload['Notas'] = notas_libres
-            payload.update({k: v for k, v in extra.items() if v})
-            notas_extra = json.dumps(payload, ensure_ascii=False)
-        else:
-            notas_extra = None
+        # Neurología
+        elif especialidad == 'Neurología':
+            notas_extra['reflejos'] = request.form.get('reflejos')
+            notas_extra['coordinacion'] = request.form.get('coordinacion')
 
-        conn = obtener_conexion()
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO atenciones
-                (cita_id, fecha, observaciones, diagnostico, tratamiento, recetas,
-                 indicaciones, estudios_pedidos, sintomas, notas_extra, proxima_fecha,
-                 presion_arterial, peso, altura,
-                 glucemia, insulina_utilizada, notas_clinica, tipo_diabetes, hba1c)
-                VALUES (%s,%s,%s,%s,%s,%s,
-                        %s,%s,%s,%s,%s,
-                        %s,%s,%s,%s,
-                        %s,%s,%s,%s,%s)
-            """, (
-                cita_id, fecha, observaciones, diagnostico, tratamiento, recetas,
-                indicaciones, estudios_pedidos, sintomas, notas_extra, proxima_fecha,
-                presion_arterial, peso, altura,
-                glucemia, insulina_utilizada, notas_clinica, tipo_diabetes, hba1c
-            ))
-            conn.commit()
-        conn.close()
+        # Oftalmología
+        elif especialidad == 'Oftalmología':
+            notas_extra['agudeza_visual'] = request.form.get('agudeza_visual')
+            notas_extra['presion_intraocular'] = request.form.get('presion_intraocular')
 
-        # Volver al calendario del mes correspondiente a la cita
-        fecha_cita = cita.get('fecha')
-        if fecha_cita and hasattr(fecha_cita, 'month') and hasattr(fecha_cita, 'year'):
-            return redirect(url_for('citas.calendario', mes=fecha_cita.month, anio=fecha_cita.year))
+        # Clínica
+        elif especialidad == 'Clínica':
+            notas_extra['examen_fisico'] = request.form.get('examen_fisico')
+            notas_extra['diagnostico_diferencial'] = request.form.get('diagnostico_diferencial')
 
-        return redirect(url_for('citas.calendario'))
+        notas_extra_json = json.dumps(notas_extra, ensure_ascii=False)
+
+        # =========================
+        # INSERTAR ATENCIÓN
+        # =========================
+        cursor.execute("""
+            INSERT INTO atenciones (
+                cita_id,
+                fecha,
+                observaciones,
+                diagnostico,
+                tratamiento,
+                recetas,
+                indicaciones,
+                estudios_pedidos,
+                sintomas,
+                proxima_fecha,
+                peso,
+                altura,
+                glucemia,
+                insulina_utilizada,
+                notas_clinica,
+                tipo_diabetes,
+                hba1c,
+                presion_arterial_clinica,
+                notas_extra
+            )
+            VALUES (
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s
+            )
+        """, (
+            cita_id,
+            datetime.now(),
+            observaciones,
+            diagnostico,
+            tratamiento,
+            recetas,
+            indicaciones,
+            estudios_pedidos,
+            sintomas,
+            proxima_fecha,
+            peso,
+            altura,
+            glucemia,
+            insulina_utilizada,
+            notas_clinica,
+            tipo_diabetes,
+            hba1c,
+            presion_arterial_clinica,
+            notas_extra_json
+        ))
+
+        conn.commit()
+
+        flash("Atención registrada correctamente", "success")
+
+        return redirect(url_for('citas.ver_citas', cliente_id=cita[0]))
 
     return render_template('registrar_atencion.html', cita=cita)
 
 
+# =========================
+# VER DETALLE
+# =========================
 @atenciones_bp.route('/atencion/<int:atencion_id>/ver')
 def ver_atencion(atencion_id):
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
 
-    sql = """
-    SELECT
-        a.*, cli.nombre AS cliente_nombre, doc.nombre AS doctor_nombre, doc.especialidad
-    FROM atenciones a
-    LEFT JOIN citas ci     ON ci.id = a.cita_id
-    LEFT JOIN clientes cli ON cli.id = ci.cliente_id
-    LEFT JOIN doctores doc ON doc.id = ci.doctor_id
-    WHERE a.id = %s
-    """
-    conn = obtener_conexion()
-    with conn.cursor(pymysql.cursors.DictCursor) as cur:
-        cur.execute(sql, (atencion_id,))
-        r = cur.fetchone()
-    conn.close()
+    conn = mysql.connect()
+    cursor = conn.cursor()
 
-    if not r:
-        abort(404)
+    cursor.execute("""
+        SELECT a.*,
+               cl.nombre,
+               d.nombre,
+               d.especialidad
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        JOIN doctores d ON c.doctor_id = d.id
+        WHERE a.id = %s
+    """, (atencion_id,))
 
-    peso, altura = r.get('peso'), r.get('altura')
-    imc = imc_cat = None
-    try:
-        if peso and altura:
-            alt = float(altura)
-            if alt > 3:
-                alt = alt / 100.0
-            imc = round(float(peso) / (alt ** 2), 2)
-            imc_cat = (
-                "Bajo peso" if imc < 18.5 else
-                "Normal" if imc < 25 else
-                "Sobrepeso" if imc < 30 else "Obesidad"
-            )
-    except Exception:
-        pass
+    atencion = cursor.fetchone()
 
-    hba_cat = None
-    try:
-        h = float(str(r.get('hba1c') or '').replace(',', '.'))
-        hba_cat = "Normal" if h < 5.7 else ("Prediabetes" if h < 6.5 else "Diabetes")
-    except Exception:
-        pass
-
-    notas_extra = r.get('notas_extra')
-    try:
-        notas_extra = json.loads(notas_extra) if notas_extra else {}
-    except Exception:
-        notas_extra = {}
-
-    atencion = dict(r)
-    atencion.update({
-        "imc": imc,
-        "imc_cat": imc_cat,
-        "hba1c_cat": hba_cat
-    })
+    if not atencion:
+        flash("Atención no encontrada", "danger")
+        return redirect(url_for('clientes.index'))
 
     return render_template(
         'detalle_atencion.html',
-        atencion=atencion,
-        notas_extra=notas_extra
+        atencion=atencion
     )
 
 
-@atenciones_bp.route('/atencion/<int:atencion_id>/detalle', methods=['GET'])
+# =========================
+# JSON DETALLE
+# =========================
+@atenciones_bp.route('/atencion/<int:atencion_id>/detalle')
 def detalle_atencion_json(atencion_id):
-    if 'usuario' not in session:
-        return jsonify({"ok": False, "error": "No autorizado"}), 401
 
+    conn = mysql.connect()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.*,
+               cl.nombre AS cliente_nombre,
+               d.nombre AS doctor_nombre,
+               d.especialidad
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        JOIN doctores d ON c.doctor_id = d.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    row = cursor.fetchone()
+
+    if not row:
+        return jsonify({"error": "No encontrada"}), 404
+
+    columnas = [col[0] for col in cursor.description]
+
+    data = {}
+
+    for i, col in enumerate(columnas):
+
+        valor = row[i]
+
+        if isinstance(valor, datetime):
+            valor = valor.strftime('%d/%m/%Y %H:%M')
+
+        data[col] = valor
+
+    # =========================
+    # PARSEAR NOTAS EXTRA
+    # =========================
     try:
-        conn = obtener_conexion()
-        with conn.cursor(pymysql.cursors.DictCursor) as cur:
-            cur.execute("""
-                SELECT
-                    a.*,
-                    cli.nombre AS cliente_nombre,
-                    doc.nombre AS doctor_nombre,
-                    doc.especialidad AS especialidad
-                FROM atenciones a
-                LEFT JOIN citas ci     ON ci.id = a.cita_id
-                LEFT JOIN clientes cli ON cli.id = ci.cliente_id
-                LEFT JOIN doctores doc ON doc.id = ci.doctor_id
-                WHERE a.id = %s
-            """, (atencion_id,))
-            r = cur.fetchone()
-        conn.close()
+        if data.get('notas_extra'):
+            data['notas_extra'] = json.loads(data['notas_extra'])
+    except:
+        data['notas_extra'] = {}
 
-        if not r:
-            return jsonify({"ok": False, "error": "Atención no encontrada"}), 404
+    # =========================
+    # CALCULAR IMC
+    # =========================
+    try:
+        peso = float(data.get('peso') or 0)
+        altura = float(data.get('altura') or 0)
 
-        def to_primitive(v):
-            if isinstance(v, (datetime, date)):
-                return v.strftime("%Y-%m-%d %H:%M")
-            if isinstance(v, Decimal):
-                return float(v)
-            return v
+        if peso > 0 and altura > 0:
 
-        r = {k: to_primitive(v) for k, v in r.items()}
+            altura_m = altura / 100
 
-        ne = r.get("notas_extra")
-        if isinstance(ne, str) and ne.strip():
-            try:
-                r["notas_extra"] = json.loads(ne)
-            except Exception:
-                pass
-        elif ne is None:
-            r["notas_extra"] = {}
+            imc = round(peso / (altura_m ** 2), 2)
 
-        try:
-            peso = float(r["peso"]) if r.get("peso") not in (None, "", "NULL") else None
-            altura = float(r["altura"]) if r.get("altura") not in (None, "", "NULL") else None
-            if peso and altura:
-                alt = altura / 100.0 if altura > 3 else altura
-                imc = round(peso / (alt ** 2), 2)
-                r["imc"] = imc
-                r["imc_cat"] = (
-                    "Bajo peso" if imc < 18.5 else
-                    "Normal" if imc < 25 else
-                    "Sobrepeso" if imc < 30 else "Obesidad"
-                )
-        except Exception:
-            pass
+            data['imc'] = imc
 
-        try:
-            h = float(str(r.get("hba1c") or "").replace(",", "."))
-            r["hba1c_cat"] = "Normal" if h < 5.7 else ("Prediabetes" if h < 6.5 else "Diabetes")
-        except Exception:
-            r["hba1c_cat"] = None
+            if imc < 18.5:
+                data['imc_categoria'] = 'Bajo peso'
+            elif imc < 25:
+                data['imc_categoria'] = 'Normal'
+            elif imc < 30:
+                data['imc_categoria'] = 'Sobrepeso'
+            else:
+                data['imc_categoria'] = 'Obesidad'
 
-        return jsonify({"ok": True, "data": r})
+    except:
+        pass
 
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
+    # =========================
+    # HbA1c
+    # =========================
+    try:
+        hba1c = float(data.get('hba1c') or 0)
 
+        if hba1c < 5.7:
+            data['hba1c_categoria'] = 'Normal'
+        elif hba1c < 6.5:
+            data['hba1c_categoria'] = 'Prediabetes'
+        else:
+            data['hba1c_categoria'] = 'Diabetes'
 
-@atenciones_bp.route('/historial_atenciones/<int:cliente_id>')
-def historial_atenciones(cliente_id):
-    if 'usuario' not in session:
-        return redirect(url_for('auth.login'))
+    except:
+        pass
 
-    conn = obtener_conexion()
-    with conn.cursor(pymysql.cursors.DictCursor) as cursor:
-        cursor.execute("""
-            SELECT a.id, a.fecha, a.diagnostico, a.tratamiento, a.observaciones,
-                   a.recetas, a.notas_extra, a.proxima_fecha, d.nombre AS doctor
-            FROM atenciones a
-            JOIN citas c ON a.cita_id = c.id
-            JOIN doctores d ON c.doctor_id = d.id
-            WHERE c.cliente_id = %s
-            ORDER BY a.fecha DESC
-        """, (cliente_id,))
-        atenciones = cursor.fetchall()
-
-        cursor.execute("SELECT id, nombre FROM clientes WHERE id = %s", (cliente_id,))
-        cliente = cursor.fetchone()
-
-    conn.close()
-
-    if not cliente:
-        abort(404)
-
-    return render_template(
-        'historial_atenciones.html',
-        cliente=cliente,
-        atenciones=atenciones
-    )
+    return jsonify(data)
