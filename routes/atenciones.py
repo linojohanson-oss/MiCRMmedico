@@ -243,3 +243,39 @@ def detalle_atencion_json(atencion_id):
         pass
 
     return jsonify(data)
+@atenciones_bp.route('/historial_atenciones/<int:cliente_id>')
+def historial_atenciones(cliente_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, nombre, correo, telefono
+        FROM clientes
+        WHERE id = %s
+    """, (cliente_id,))
+    cliente = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT a.id,
+               a.fecha,
+               a.diagnostico,
+               a.tratamiento,
+               a.observaciones,
+               d.nombre AS doctor_nombre,
+               d.especialidad
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN doctores d ON c.doctor_id = d.id
+        WHERE c.cliente_id = %s
+        ORDER BY a.fecha DESC
+    """, (cliente_id,))
+    atenciones = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        'historial_atenciones.html',
+        cliente=cliente,
+        atenciones=atenciones
+    )
