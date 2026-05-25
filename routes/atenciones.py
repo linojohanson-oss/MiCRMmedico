@@ -6,20 +6,14 @@ import json
 atenciones_bp = Blueprint('atenciones', __name__)
 
 
-# =========================
-# REGISTRAR ATENCIÓN
-# =========================
 @atenciones_bp.route('/atencion/<int:cita_id>', methods=['GET', 'POST'])
 def registrar_atencion(cita_id):
-
     conn = obtener_conexion()
     cursor = conn.cursor()
 
-    # Obtener datos de la cita
     cursor.execute("""
         SELECT c.id,
                c.fecha,
-               c.hora,
                cl.nombre,
                d.nombre,
                d.especialidad
@@ -32,14 +26,12 @@ def registrar_atencion(cita_id):
     cita = cursor.fetchone()
 
     if not cita:
+        cursor.close()
+        conn.close()
         flash("Cita no encontrada", "danger")
         return redirect(url_for('clientes.index'))
 
     if request.method == 'POST':
-
-        # =========================
-        # CAMPOS GENERALES
-        # =========================
         observaciones = request.form.get('observaciones')
         diagnostico = request.form.get('diagnostico')
         tratamiento = request.form.get('tratamiento')
@@ -49,11 +41,9 @@ def registrar_atencion(cita_id):
         sintomas = request.form.get('sintomas')
         proxima_fecha = request.form.get('proxima_fecha')
 
-        # Clínica
         presion_arterial_clinica = request.form.get('presion_arterial_clinica')
         notas_clinica = request.form.get('notas_clinica')
 
-        # Endocrinología
         peso = request.form.get('peso')
         altura = request.form.get('altura')
         glucemia = request.form.get('glucemia')
@@ -61,38 +51,28 @@ def registrar_atencion(cita_id):
         tipo_diabetes = request.form.get('tipo_diabetes')
         hba1c = request.form.get('hba1c')
 
-        # =========================
-        # NOTAS EXTRA
-        # =========================
+        especialidad = cita[4]
+
         notas_extra = {}
 
-        especialidad = cita[5]
-
-        # Cardiología
         if especialidad == 'Cardiología':
             notas_extra['frecuencia_cardiaca'] = request.form.get('frecuencia_cardiaca')
             notas_extra['presion_arterial'] = request.form.get('presion_arterial')
 
-        # Neurología
         elif especialidad == 'Neurología':
             notas_extra['reflejos'] = request.form.get('reflejos')
             notas_extra['coordinacion'] = request.form.get('coordinacion')
 
-        # Oftalmología
         elif especialidad == 'Oftalmología':
             notas_extra['agudeza_visual'] = request.form.get('agudeza_visual')
             notas_extra['presion_intraocular'] = request.form.get('presion_intraocular')
 
-        # Clínica
         elif especialidad == 'Clínica':
             notas_extra['examen_fisico'] = request.form.get('examen_fisico')
             notas_extra['diagnostico_diferencial'] = request.form.get('diagnostico_diferencial')
 
         notas_extra_json = json.dumps(notas_extra, ensure_ascii=False)
 
-        # =========================
-        # INSERTAR ATENCIÓN
-        # =========================
         cursor.execute("""
             INSERT INTO atenciones (
                 cita_id,
@@ -144,12 +124,10 @@ def registrar_atencion(cita_id):
         ))
 
         conn.commit()
-
         cursor.close()
         conn.close()
 
         flash("Atención registrada correctamente", "success")
-
         return redirect(url_for('clientes.index'))
 
     cursor.close()
@@ -158,12 +136,8 @@ def registrar_atencion(cita_id):
     return render_template('registrar_atencion.html', cita=cita)
 
 
-# =========================
-# VER DETALLE
-# =========================
 @atenciones_bp.route('/atencion/<int:atencion_id>/ver')
 def ver_atencion(atencion_id):
-
     conn = obtener_conexion()
     cursor = conn.cursor()
 
@@ -188,18 +162,11 @@ def ver_atencion(atencion_id):
         flash("Atención no encontrada", "danger")
         return redirect(url_for('clientes.index'))
 
-    return render_template(
-        'detalle_atencion.html',
-        atencion=atencion
-    )
+    return render_template('detalle_atencion.html', atencion=atencion)
 
 
-# =========================
-# JSON DETALLE
-# =========================
 @atenciones_bp.route('/atencion/<int:atencion_id>/detalle')
 def detalle_atencion_json(atencion_id):
-
     conn = obtener_conexion()
     cursor = conn.cursor()
 
@@ -217,18 +184,19 @@ def detalle_atencion_json(atencion_id):
 
     row = cursor.fetchone()
 
+    if not row:
+        cursor.close()
+        conn.close()
+        return jsonify({"error": "No encontrada"}), 404
+
     columnas = [col[0] for col in cursor.description]
 
     cursor.close()
     conn.close()
 
-    if not row:
-        return jsonify({"error": "No encontrada"}), 404
-
     data = {}
 
     for i, col in enumerate(columnas):
-
         valor = row[i]
 
         if isinstance(valor, datetime):
@@ -236,26 +204,18 @@ def detalle_atencion_json(atencion_id):
 
         data[col] = valor
 
-    # =========================
-    # PARSEAR NOTAS EXTRA
-    # =========================
     try:
         if data.get('notas_extra'):
             data['notas_extra'] = json.loads(data['notas_extra'])
     except:
         data['notas_extra'] = {}
 
-    # =========================
-    # CALCULAR IMC
-    # =========================
     try:
         peso = float(data.get('peso') or 0)
         altura = float(data.get('altura') or 0)
 
         if peso > 0 and altura > 0:
-
             altura_m = altura / 100
-
             imc = round(peso / (altura_m ** 2), 2)
 
             data['imc'] = imc
@@ -268,13 +228,9 @@ def detalle_atencion_json(atencion_id):
                 data['imc_categoria'] = 'Sobrepeso'
             else:
                 data['imc_categoria'] = 'Obesidad'
-
     except:
         pass
 
-    # =========================
-    # HbA1c
-    # =========================
     try:
         hba1c = float(data.get('hba1c') or 0)
 
@@ -284,7 +240,6 @@ def detalle_atencion_json(atencion_id):
             data['hba1c_categoria'] = 'Prediabetes'
         else:
             data['hba1c_categoria'] = 'Diabetes'
-
     except:
         pass
 
