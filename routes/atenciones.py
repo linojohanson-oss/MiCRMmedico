@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 import os
 import smtplib
+import resend
 from email.message import EmailMessage
 
 atenciones_bp = Blueprint('atenciones', __name__)
@@ -450,32 +451,35 @@ def atencion_pdf(atencion_id):
 
     return response
 def enviar_email(destinatario, asunto, cuerpo):
-    email_user = os.getenv("EMAIL_USER")
-    email_pass = os.getenv("EMAIL_PASS")
 
-    if not email_user or not email_pass:
-        return False, "Faltan EMAIL_USER o EMAIL_PASS"
+    resend_api_key = os.getenv("RESEND_API_KEY")
+
+    email_from = os.getenv(
+        "EMAIL_FROM",
+        "CRM Médico <onboarding@resend.dev>"
+    )
+
+    if not resend_api_key:
+        return False, "Falta RESEND_API_KEY"
 
     try:
-        msg = EmailMessage()
-        msg["From"] = email_user
-        msg["To"] = destinatario
-        msg["Subject"] = asunto
-        msg.set_content(cuerpo)
 
-        with smtplib.SMTP_SSL(
-            "smtp.gmail.com",
-            465,
-            timeout=15
-        ) as smtp:
+        resend.api_key = resend_api_key
 
-            smtp.login(email_user, email_pass)
-            smtp.send_message(msg)
+        params = {
+            "from": email_from,
+            "to": [destinatario],
+            "subject": asunto,
+            "html": cuerpo.replace("\n", "<br>")
+        }
+
+        resend.Emails.send(params)
 
         return True, "Email enviado correctamente"
 
     except Exception as e:
-        return False, f"Error enviando email: {str(e)}"
+
+        return False, f"Error enviando email con Resend: {str(e)}"
 
 @atenciones_bp.route('/atencion/<int:atencion_id>/enviar_receta')
 def enviar_receta_email(atencion_id):
