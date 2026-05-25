@@ -45,7 +45,7 @@ def registrar_atencion(cita_id):
         proxima_fecha = val('proxima_fecha') or None
 
         presion_arterial = val('ta') or val('presion_arterial') or None
-        presion_arterial_clinica = val('presion_arterial_clinica') or None
+
         peso = request.form.get('peso') or None
         altura = request.form.get('altura') or None
         glucemia = request.form.get('glucemia') or None
@@ -101,7 +101,7 @@ def registrar_atencion(cita_id):
                 INSERT INTO atenciones
                 (cita_id, fecha, observaciones, diagnostico, tratamiento, recetas,
                  indicaciones, estudios_pedidos, sintomas, notas_extra, proxima_fecha,
-                 presion_arterial, presion_arterial_clinica, peso, altura,
+                 presion_arterial, peso, altura,
                  glucemia, insulina_utilizada, notas_clinica, tipo_diabetes, hba1c)
                 VALUES (%s,%s,%s,%s,%s,%s,
                         %s,%s,%s,%s,%s,
@@ -110,7 +110,7 @@ def registrar_atencion(cita_id):
             """, (
                 cita_id, fecha, observaciones, diagnostico, tratamiento, recetas,
                 indicaciones, estudios_pedidos, sintomas, notas_extra, proxima_fecha,
-                presion_arterial, presion_arterial_clinica, peso, altura,
+                presion_arterial, peso, altura,
                 glucemia, insulina_utilizada, notas_clinica, tipo_diabetes, hba1c
             ))
             conn.commit()
