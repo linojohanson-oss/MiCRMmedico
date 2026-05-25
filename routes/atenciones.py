@@ -99,7 +99,7 @@ def registrar_atencion(cita_id):
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s
+                %s, %s, %s
             )
         """, (
             cita_id,
