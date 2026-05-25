@@ -93,7 +93,6 @@ def registrar_atencion(cita_id):
                 notas_clinica,
                 tipo_diabetes,
                 hba1c,
-                presion_arterial_clinica,
                 notas_extra
             )
             VALUES (
@@ -120,7 +119,6 @@ def registrar_atencion(cita_id):
             notas_clinica,
             tipo_diabetes,
             hba1c,
-            presion_arterial_clinica,
             notas_extra_json
         ))
 
