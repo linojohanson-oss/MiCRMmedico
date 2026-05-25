@@ -2,6 +2,9 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from db import obtener_conexion
 from datetime import datetime
 import json
+import os
+import smtplib
+from email.message import EmailMessage
 
 atenciones_bp = Blueprint('atenciones', __name__)
 
@@ -446,3 +449,248 @@ def atencion_pdf(atencion_id):
     )
 
     return response
+def enviar_email(destinatario, asunto, cuerpo):
+    email_user = os.getenv("EMAIL_USER")
+    email_pass = os.getenv("EMAIL_PASS")
+
+    if not email_user or not email_pass:
+        return False, "Faltan EMAIL_USER o EMAIL_PASS"
+
+    msg = EmailMessage()
+    msg["From"] = email_user
+    msg["To"] = destinatario
+    msg["Subject"] = asunto
+    msg.set_content(cuerpo)
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(email_user, email_pass)
+        smtp.send_message(msg)
+
+    return True, "Email enviado correctamente"
+
+
+@atenciones_bp.route('/atencion/<int:atencion_id>/enviar_receta')
+def enviar_receta_email(atencion_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.id, cl.nombre, cl.correo
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    data = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not data:
+        return "Atención no encontrada", 404
+
+    if not data[2]:
+        return "El paciente no tiene correo cargado", 400
+
+    link_receta = url_for('atenciones.receta_pdf', atencion_id=atencion_id, _external=True)
+
+    cuerpo = f"""
+Hola {data[1]},
+
+Te enviamos el enlace para descargar tu receta médica:
+
+{link_receta}
+
+Saludos,
+CRM Médico
+"""
+
+    ok, mensaje = enviar_email(
+        data[2],
+        "Receta médica",
+        cuerpo
+    )
+
+    if not ok:
+        return mensaje, 500
+
+    return "Receta enviada correctamente por email"
+
+
+@atenciones_bp.route('/atencion/<int:atencion_id>/enviar_pdf')
+def enviar_pdf_email(atencion_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.id, cl.nombre, cl.correo
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    data = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not data:
+        return "Atención no encontrada", 404
+
+    if not data[2]:
+        return "El paciente no tiene correo cargado", 400
+
+    link_pdf = url_for('atenciones.atencion_pdf', atencion_id=atencion_id, _external=True)
+
+    cuerpo = f"""
+Hola {data[1]},
+
+Te enviamos el enlace para descargar el informe completo de tu atención médica:
+
+{link_pdf}
+
+Saludos,
+CRM Médico
+"""
+
+    ok, mensaje = enviar_email(
+        data[2],
+        "Informe de atención médica",
+        cuerpo
+    )
+
+    if not ok:
+        return mensaje, 500
+
+    return "Informe enviado correctamente por email"
+import os
+import smtplib
+from email.message import EmailMessage
+
+
+def enviar_email(destinatario, asunto, cuerpo):
+    email_user = os.getenv("EMAIL_USER")
+    email_pass = os.getenv("EMAIL_PASS")
+
+    if not email_user or not email_pass:
+        return False, "Faltan EMAIL_USER o EMAIL_PASS"
+
+    msg = EmailMessage()
+    msg["From"] = email_user
+    msg["To"] = destinatario
+    msg["Subject"] = asunto
+    msg.set_content(cuerpo)
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(email_user, email_pass)
+        smtp.send_message(msg)
+
+    return True, "Email enviado correctamente"
+
+
+@atenciones_bp.route('/atencion/<int:atencion_id>/enviar_pdf')
+def enviar_pdf_email(atencion_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.id, cl.nombre, cl.correo
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    data = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not data:
+        return "Atención no encontrada", 404
+
+    if not data[2]:
+        return "El paciente no tiene correo cargado", 400
+
+    link_pdf = url_for(
+        'atenciones.atencion_pdf',
+        atencion_id=atencion_id,
+        _external=True
+    )
+
+    cuerpo = f"""
+Hola {data[1]},
+
+Te enviamos el enlace para descargar el informe completo de tu atención médica:
+
+{link_pdf}
+
+Saludos,
+CRM Médico
+"""
+
+    ok, mensaje = enviar_email(
+        data[2],
+        "Informe de atención médica",
+        cuerpo
+    )
+
+    if not ok:
+        return mensaje, 500
+
+    return "Informe enviado correctamente por email"
+
+
+@atenciones_bp.route('/atencion/<int:atencion_id>/enviar_receta')
+def enviar_receta_email(atencion_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT a.id, cl.nombre, cl.correo
+        FROM atenciones a
+        JOIN citas c ON a.cita_id = c.id
+        JOIN clientes cl ON c.cliente_id = cl.id
+        WHERE a.id = %s
+    """, (atencion_id,))
+
+    data = cursor.fetchone()
+
+    cursor.close()
+    conn.close()
+
+    if not data:
+        return "Atención no encontrada", 404
+
+    if not data[2]:
+        return "El paciente no tiene correo cargado", 400
+
+    link_receta = url_for(
+        'atenciones.receta_pdf',
+        atencion_id=atencion_id,
+        _external=True
+    )
+
+    cuerpo = f"""
+Hola {data[1]},
+
+Te enviamos el enlace para descargar tu receta médica:
+
+{link_receta}
+
+Saludos,
+CRM Médico
+"""
+
+    ok, mensaje = enviar_email(
+        data[2],
+        "Receta médica",
+        cuerpo
+    )
+
+    if not ok:
+        return mensaje, 500
+
+    return "Receta enviada correctamente por email"
