@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <title>Citas de {{ cliente.nombre }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
     <style>
         body {
             background-color: #f8f9fa;
@@ -24,42 +27,62 @@
             background: linear-gradient(135deg, #0d6efd, #0b5ed7);
             color: white;
         }
+
+        .badge-atendido {
+            font-size: .85rem;
+            padding: 8px 12px;
+            border-radius: 12px;
+        }
     </style>
 </head>
+
 <body>
 
 <div class="container py-4">
+
     <div class="card shadow-sm border-0">
+
         <div class="card-header card-header-custom d-flex justify-content-between align-items-center flex-wrap">
+
             <div>
                 <h3 class="mb-0">Citas de {{ cliente.nombre }}</h3>
                 <small>Gestión de turnos del cliente</small>
             </div>
+
         </div>
 
         <div class="card-body">
+
             <div class="mb-3 d-flex flex-wrap gap-2">
-                <a href="{{ url_for('clientes.index') }}" class="btn btn-secondary">
+
+                <a href="{{ url_for('clientes.index') }}"
+                   class="btn btn-secondary">
                     ← Volver a Clientes
                 </a>
 
-                <a href="{{ url_for('citas.agregar_cita', cliente_id=cliente.id) }}" class="btn btn-primary">
+                <a href="{{ url_for('citas.agregar_cita', cliente_id=cliente.id) }}"
+                   class="btn btn-primary">
                     ➕ Agregar Cita
                 </a>
 
                 <a href="{{ url_for('atenciones.historial_atenciones', cliente_id=cliente.id) }}"
-                    class="btn btn-outline-success">
+                   class="btn btn-outline-success">
                     📋 Ver Historial
                 </a>
 
-                <a href="{{ url_for('auth.inicio') }}" class="btn btn-outline-dark">
+                <a href="{{ url_for('auth.inicio') }}"
+                   class="btn btn-outline-dark">
                     Inicio
                 </a>
+
             </div>
 
             {% if citas %}
+
             <div class="table-responsive">
+
                 <table class="table table-bordered table-hover align-middle bg-white">
+
                     <thead class="table-dark">
                         <tr>
                             <th style="width: 70px;">ID</th>
@@ -69,16 +92,23 @@
                             <th style="width: 340px;">Acciones</th>
                         </tr>
                     </thead>
+
                     <tbody>
+
                         {% for cita in citas %}
+
                         <tr>
                             <td>{{ cita.id }}</td>
                             <td>{{ cita.fecha }}</td>
                             <td>{{ cita.descripcion or 'Sin descripción' }}</td>
                             <td>{{ cita.doctor or 'Sin asignar' }}</td>
+
                             <td>
+
                                 <div class="acciones">
-                                    <a href="{{ url_for('citas.editar_cita', cita_id=cita.id) }}" class="btn btn-sm btn-warning">
+
+                                    <a href="{{ url_for('citas.editar_cita', cita_id=cita.id) }}"
+                                       class="btn btn-sm btn-warning">
                                         Editar
                                     </a>
 
@@ -88,32 +118,58 @@
                                         Eliminar
                                     </a>
 
-                                    <a href="{{ url_for('atenciones.registrar_atencion', cita_id=cita.id) }}"
-                                       class="btn btn-sm btn-success">
-                                        🩺 Atender
-                                    </a>
+                                    {% if cita.atencion_id %}
+
+                                        <span class="badge bg-success badge-atendido">
+                                            ✅ Atendido
+                                        </span>
+
+                                    {% else %}
+
+                                        <a href="{{ url_for('atenciones.registrar_atencion', cita_id=cita.id) }}"
+                                           class="btn btn-sm btn-success">
+                                            🩺 Atender
+                                        </a>
+
+                                    {% endif %}
 
                                     <form action="{{ url_for('citas.enviar_recordatorio', cita_id=cita.id, cliente_id=cliente.id) }}"
                                           method="post"
                                           style="display:inline;">
-                                        <button type="submit" class="btn btn-sm btn-info text-white">
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-info text-white">
                                             Recordatorio
                                         </button>
+
                                     </form>
+
                                 </div>
+
                             </td>
+
                         </tr>
+
                         {% endfor %}
+
                     </tbody>
+
                 </table>
+
             </div>
+
             {% else %}
+
             <div class="alert alert-info mb-0">
                 Este cliente no tiene citas registradas.
             </div>
+
             {% endif %}
+
         </div>
+
     </div>
+
 </div>
 
 </body>

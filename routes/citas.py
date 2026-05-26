@@ -12,6 +12,7 @@ def ver_citas(cliente_id):
         return redirect(url_for('auth.login'))
 
     conn = obtener_conexion()
+
     with conn.cursor() as cursor:
         cursor.execute("SELECT id, nombre FROM clientes WHERE id = %s", (cliente_id,))
         cliente = cursor.fetchone()
@@ -21,13 +22,21 @@ def ver_citas(cliente_id):
             return redirect(url_for('clientes.index'))
 
         cursor.execute("""
-            SELECT c.id, c.fecha, c.descripcion, d.nombre
+            SELECT 
+                c.id,
+                c.fecha,
+                c.descripcion,
+                d.nombre,
+                a.id AS atencion_id
             FROM citas c
             LEFT JOIN doctores d ON c.doctor_id = d.id
+            LEFT JOIN atenciones a ON a.cita_id = c.id
             WHERE c.cliente_id = %s
             ORDER BY c.fecha ASC
         """, (cliente_id,))
+
         citas_raw = cursor.fetchall()
+
     conn.close()
 
     citas = [
@@ -35,7 +44,8 @@ def ver_citas(cliente_id):
             'id': row[0],
             'fecha': row[1],
             'descripcion': row[2],
-            'doctor': row[3]
+            'doctor': row[3],
+            'atencion_id': row[4]
         }
         for row in citas_raw
     ]
@@ -64,17 +74,23 @@ def agregar_cita(cliente_id):
         doctor_id = request.form['doctor_id']
 
         with conn.cursor() as cursor:
-            cursor.execute(
-                "INSERT INTO citas (cliente_id, fecha, descripcion, doctor_id) VALUES (%s, %s, %s, %s)",
-                (cliente_id, fecha, descripcion, doctor_id)
-            )
+            cursor.execute("""
+                INSERT INTO citas (cliente_id, fecha, descripcion, doctor_id)
+                VALUES (%s, %s, %s, %s)
+            """, (cliente_id, fecha, descripcion, doctor_id))
+
             conn.commit()
 
         conn.close()
         return redirect(url_for('citas.ver_citas', cliente_id=cliente_id))
 
     conn.close()
-    return render_template('agregar_cita.html', cliente_id=cliente_id, doctores=doctores)
+
+    return render_template(
+        'agregar_cita.html',
+        cliente_id=cliente_id,
+        doctores=doctores
+    )
 
 
 @citas_bp.route('/editar_cita/<int:cita_id>', methods=['GET', 'POST'])
@@ -96,14 +112,18 @@ def editar_cita(cita_id):
 
             cursor.execute("""
                 UPDATE citas
-                SET fecha = %s, descripcion = %s, doctor_id = %s
+                SET fecha = %s,
+                    descripcion = %s,
+                    doctor_id = %s
                 WHERE id = %s
             """, (fecha, descripcion, doctor_id, cita_id))
+
             conn.commit()
             conn.close()
 
             if cliente_id:
                 return redirect(url_for('citas.ver_citas', cliente_id=cliente_id))
+
             return redirect(url_for('clientes.index'))
 
         cursor.execute("""
@@ -111,6 +131,7 @@ def editar_cita(cita_id):
             FROM citas
             WHERE id = %s
         """, (cita_id,))
+
         cita = cursor.fetchone()
 
         if not cita:
@@ -129,7 +150,12 @@ def editar_cita(cita_id):
         doctores = cursor.fetchall()
 
     conn.close()
-    return render_template('editar_cita.html', cita=cita_dict, doctores=doctores)
+
+    return render_template(
+        'editar_cita.html',
+        cita=cita_dict,
+        doctores=doctores
+    )
 
 
 @citas_bp.route('/eliminar_cita/<int:cita_id>')
@@ -152,6 +178,7 @@ def eliminar_cita(cita_id):
 
     if cliente_id:
         return redirect(url_for('citas.ver_citas', cliente_id=cliente_id))
+
     return redirect(url_for('clientes.index'))
 
 
@@ -164,14 +191,18 @@ def enviar_recordatorio(cita_id):
 
     if not cliente_id:
         conn = obtener_conexion()
+
         with conn.cursor() as cur:
             cur.execute("SELECT cliente_id FROM citas WHERE id = %s", (cita_id,))
             row = cur.fetchone()
+
         conn.close()
+
         cliente_id = row[0] if row else None
 
     if cliente_id:
         return redirect(url_for('citas.ver_citas', cliente_id=cliente_id))
+
     return redirect(url_for('clientes.index'))
 
 
@@ -189,6 +220,7 @@ def calendario():
     semanas = cal.monthdayscalendar(anio, mes)
 
     conn = obtener_conexion()
+
     with conn.cursor() as cursor:
         cursor.execute("SELECT id, nombre, especialidad FROM doctores ORDER BY nombre")
         doctores = cursor.fetchall()
@@ -208,8 +240,10 @@ def calendario():
             LEFT JOIN clientes cl ON c.cliente_id = cl.id
             LEFT JOIN doctores d ON c.doctor_id = d.id
             LEFT JOIN atenciones a ON a.cita_id = c.id
-            WHERE YEAR(c.fecha) = %s AND MONTH(c.fecha) = %s
+            WHERE YEAR(c.fecha) = %s
+              AND MONTH(c.fecha) = %s
         """
+
         params = [anio, mes]
 
         if doctor_id:
@@ -220,6 +254,7 @@ def calendario():
 
         cursor.execute(sql, tuple(params))
         citas_raw = cursor.fetchall()
+
     conn.close()
 
     citas_por_dia = {}
@@ -236,6 +271,7 @@ def calendario():
         atencion_id = row[8]
 
         dia = fecha.day
+
         if dia not in citas_por_dia:
             citas_por_dia[dia] = []
 
@@ -267,8 +303,19 @@ def calendario():
         anio_siguiente = anio
 
     nombres_meses = [
-        "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        "",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre"
     ]
 
     return render_template(
@@ -294,6 +341,7 @@ def agenda_dia(fecha):
         return redirect(url_for('auth.login'))
 
     conn = obtener_conexion()
+
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT 
@@ -311,6 +359,7 @@ def agenda_dia(fecha):
             WHERE DATE(c.fecha) = %s
             ORDER BY c.fecha ASC
         """, (fecha,))
+
         citas = cursor.fetchall()
 
         cursor.execute("SELECT id, nombre FROM clientes ORDER BY nombre")
@@ -346,12 +395,15 @@ def crear_cita_ajax():
         return jsonify({"ok": False, "error": "Faltan datos obligatorios"}), 400
 
     conn = obtener_conexion()
+
     with conn.cursor() as cursor:
         cursor.execute("""
             INSERT INTO citas (cliente_id, fecha, descripcion, doctor_id)
             VALUES (%s, %s, %s, %s)
         """, (cliente_id, fecha, descripcion, doctor_id))
+
         conn.commit()
+
     conn.close()
 
     return jsonify({"ok": True})
