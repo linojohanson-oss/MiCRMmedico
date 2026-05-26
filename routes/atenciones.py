@@ -8,7 +8,6 @@ import resend
 
 atenciones_bp = Blueprint('atenciones', __name__)
 
-
 @atenciones_bp.route('/atencion/<int:cita_id>', methods=['GET', 'POST'])
 def registrar_atencion(cita_id):
     conn = obtener_conexion()
@@ -20,7 +19,8 @@ def registrar_atencion(cita_id):
                c.fecha,
                cl.nombre,
                d.nombre,
-               d.especialidad
+               d.especialidad,
+               c.doctor_id
         FROM citas c
         JOIN clientes cl ON c.cliente_id = cl.id
         JOIN doctores d ON c.doctor_id = d.id
@@ -54,6 +54,9 @@ def registrar_atencion(cita_id):
         hba1c = request.form.get('hba1c')
 
         especialidad = cita[5]
+        cliente_id = cita[1]
+        doctor_id = cita[6]
+
         notas_extra = {}
 
         if especialidad == 'Cardiología':
@@ -122,19 +125,37 @@ def registrar_atencion(cita_id):
             notas_extra_json
         ))
 
+        if proxima_fecha:
+            cursor.execute("""
+                INSERT INTO citas (
+                    cliente_id,
+                    fecha,
+                    descripcion,
+                    doctor_id
+                )
+                VALUES (%s, %s, %s, %s)
+            """, (
+                cliente_id,
+                proxima_fecha,
+                'Control / próxima consulta',
+                doctor_id
+            ))
+
         conn.commit()
         cursor.close()
         conn.close()
 
-        flash("Atención registrada correctamente", "success")
-        return redirect(url_for('citas.ver_citas', cliente_id=cita[1]))
+        if proxima_fecha:
+            flash("Atención registrada y próxima cita creada correctamente", "success")
+        else:
+            flash("Atención registrada correctamente", "success")
+
+        return redirect(url_for('citas.ver_citas', cliente_id=cliente_id))
 
     cursor.close()
     conn.close()
 
     return render_template('registrar_atencion.html', cita=cita)
-
-
 @atenciones_bp.route('/atencion/<int:atencion_id>/ver')
 def ver_atencion(atencion_id):
     conn = obtener_conexion()
