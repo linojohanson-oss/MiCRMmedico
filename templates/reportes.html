@@ -147,6 +147,24 @@
 
 </div>
 
+<div class="row">
+
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h3>Atenciones por doctor</h3>
+            <canvas id="graficoDoctor"></canvas>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="chart-card">
+            <h3>Pacientes frecuentes</h3>
+            <canvas id="graficoPacientes"></canvas>
+        </div>
+    </div>
+
+</div>
+
 <div class="table-card">
     <h3>Detalle por especialidad</h3>
 
@@ -202,6 +220,30 @@
         {% endfor %}
     ];
 
+    const doctorLabels = [
+        {% for item in atenciones_por_doctor %}
+            "{{ item.doctor }}",
+        {% endfor %}
+    ];
+
+    const doctorData = [
+        {% for item in atenciones_por_doctor %}
+            {{ item.total }},
+        {% endfor %}
+    ];
+
+    const pacientesLabels = [
+        {% for item in pacientes_frecuentes %}
+            "{{ item.paciente }}",
+        {% endfor %}
+    ];
+
+    const pacientesData = [
+        {% for item in pacientes_frecuentes %}
+            {{ item.total }},
+        {% endfor %}
+    ];
+
     new Chart(document.getElementById('graficoEspecialidades'), {
         type: 'bar',
         data: {
@@ -244,6 +286,52 @@
             responsive: true,
             scales: {
                 y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('graficoDoctor'), {
+        type: 'doughnut',
+        data: {
+            labels: doctorLabels,
+            datasets: [{
+                data: doctorData,
+                backgroundColor: [
+                    '#3498db',
+                    '#2ecc71',
+                    '#f39c12',
+                    '#9b59b6',
+                    '#e74c3c',
+                    '#1abc9c',
+                    '#34495e',
+                    '#16a085'
+                ]
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+
+    new Chart(document.getElementById('graficoPacientes'), {
+        type: 'bar',
+        data: {
+            labels: pacientesLabels,
+            datasets: [{
+                label: 'Cantidad de citas',
+                data: pacientesData,
+                backgroundColor: '#2ecc71',
+                borderRadius: 10
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            scales: {
+                x: {
                     beginAtZero: true,
                     ticks: { precision: 0 }
                 }
