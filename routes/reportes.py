@@ -59,7 +59,7 @@ def ver_reportes():
         JOIN clientes cl ON c.cliente_id = cl.id
         GROUP BY cl.nombre
         ORDER BY total DESC
-        LIMIT 5
+        LIMIT 10
     """)
     pacientes_frecuentes = cursor.fetchall()
 
